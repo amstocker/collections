@@ -63,7 +63,7 @@ void *List_tail(List *l) {
 
 void *List_next(List *l, void *elem) {
     ListNode *n = get_node_from_elem(l, elem);
-    if (n->next == l) {
+    if (n->next == (void*) l) {
         return NULL;
     }
     return n->next;
