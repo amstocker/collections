@@ -30,11 +30,12 @@ int main() {
     printf("appending 666... length: %lu\n", l->size);
     
     printf("forward iter...\n");
-    List_iter(Test *elem, l) {
+    List_forEach(Test *elem, l) {
         printf("elem->a: %i\n", elem->a);
     }
+    
     printf("backwards iter...\n");
-    List_iterBackwards(Test *elem, l) {
+    List_forEachReverse(Test *elem, l) {
         printf("elem->a: %i\n", elem->a);
     }
 
@@ -44,5 +45,9 @@ int main() {
         printf("next->a: %i, length: %lu\n", next->a, l->size);
         next = List_popHead(l);
     }
+
+    free(t1);
+    free(t2);
+    free(l);
     return 0;
 }

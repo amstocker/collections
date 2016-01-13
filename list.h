@@ -24,13 +24,13 @@ typedef struct {
 #define ListNode_init(P, T, M) ListNode_initWithOffset(P, offsetof(T, M))
 #define List_new(T, M) List_newWithOffset(offsetof(T, M))
 
-#define List_iter(T, L) for(T = List_head(L); \
-                            elem != NULL; \
-                            elem = List_next(L, elem))
+#define List_forEach(T, L) for(T = List_head(L); \
+                               elem != NULL; \
+                               elem = List_next(L, elem))
 
-#define List_iterBackwards(T, L) for (T = List_tail(L); \
-                                      elem != NULL; \
-                                      elem = List_prev(L, elem))
+#define List_forEachReverse(T, L) for (T = List_tail(L); \
+                                       elem != NULL; \
+                                       elem = List_prev(L, elem))
 
 
 void ListNode_initWithOffset(ListNode *n, size_t offset);
