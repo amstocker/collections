@@ -2,23 +2,6 @@
 #include "list.h"
 
 
-ListStatus ListNode_initWithOffset(ListNode *n, size_t offset) {
-    n->prev = n;
-    n->next = (void*) ((size_t) n - offset);
-    return LIST_OK;
-}
-
-List *List_newWithOffset(size_t offset) {
-    List *l = malloc(sizeof(List));
-    if (!l) {
-        return NULL;
-    }
-    l->offset = offset;
-    ListNode_initWithOffset(&l->root, offsetof(List, root));
-    return l;
-}
-
-
 static inline ListNode *get_node_from_elem(List *l, void *elem) {
     if ((void*) l == elem) {
         return &l->root;
@@ -33,12 +16,44 @@ static inline void *get_elem_from_node(List *l, ListNode *node) {
     return (void*) ((size_t) node - l->offset);
 }
 
+
+ListStatus ListNode_initWithOffset(ListNode *n, size_t offset) {
+    n->prev = n;
+    n->next = (void*) ((size_t) n - offset);
+    return LIST_OK;
+}
+
+ListStatus ListNode_unlink(List *l, ListNode *node) {
+    if (!node || node == &l->root) {
+        return LIST_ERR;
+    }
+    node->prev->next = node->next;
+    get_node_from_elem(l, node->next)->prev = node->prev;
+    ListNode_initWithOffset(node, l->offset);
+    l->size--;
+    return LIST_OK;
+}
+
+
+List *List_newWithOffset(size_t offset) {
+    List *l = malloc(sizeof(List));
+    if (!l) {
+        return NULL;
+    }
+    l->size = 0;
+    l->offset = offset;
+    ListNode_initWithOffset(&l->root, offsetof(List, root));
+    return l;
+}
+
+
 ListStatus insert_between(List *l, ListNode *a, ListNode *b, void *elem) {
     ListNode *n = get_node_from_elem(l, elem);
     a->next = elem;
     n->prev = a;
     n->next = b;
     b->prev = n;
+    l->size++;
     return LIST_OK;
 }
 
@@ -67,14 +82,6 @@ void *List_prev(List *l, void *elem) {
     return get_elem_from_node(l, n->prev);
 }
 
-void *List_remove(List *l, void *elem) {
-    ListNode *n = get_node_from_elem(l, elem);
-    n->prev->next = n->next;
-    get_node_from_elem(l, n->next)->prev = n->prev;
-    ListNode_initWithOffset(n, l->offset);
-    return elem;
-}
-
 ListStatus List_append(List *l, void *elem) {
     ListNode *last = l->root.prev;
     return insert_between(l, last, &l->root, elem);
@@ -94,4 +101,21 @@ ListStatus List_appendAfter(List *l, void *target, void *elem) {
 ListStatus List_appendBefore(List *l, void *target, void *elem) {
     ListNode *b = get_node_from_elem(l, target);
     return insert_between(l, b->prev, b, elem);
+}
+
+
+void *List_remove(List *l, void *elem) {
+    ListNode *n = get_node_from_elem(l, elem);
+    if (ListNode_unlink(l, n) == LIST_ERR) {
+        return NULL;
+    }
+    return elem;
+}
+
+void *List_popHead(List *l) {
+    return List_remove(l, l->root.next);
+}
+
+void *List_popTail(List *l) {
+    return List_remove(l, get_elem_from_node(l, l->root.next));
 }
