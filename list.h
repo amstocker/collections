@@ -33,7 +33,7 @@ typedef struct {
                                       elem = List_prev(L, elem))
 
 
-ListStatus ListNode_initWithOffset(ListNode *n, size_t offset);
+void ListNode_initWithOffset(ListNode *n, size_t offset);
 ListStatus ListNode_unlink(List *l, ListNode *node);
 List *List_newWithOffset(size_t offset);
 void *List_head(List *l);

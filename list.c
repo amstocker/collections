@@ -16,11 +16,19 @@ static inline void *get_elem_from_node(List *l, ListNode *node) {
     return (void*) ((size_t) node - l->offset);
 }
 
+static inline void insert_between(List *l, ListNode *a, ListNode *b, void *elem) {
+    ListNode *n = get_node_from_elem(l, elem);
+    a->next = elem;
+    n->prev = a;
+    n->next = b;
+    b->prev = n;
+    l->size++;
+}
 
-ListStatus ListNode_initWithOffset(ListNode *n, size_t offset) {
+
+void ListNode_initWithOffset(ListNode *n, size_t offset) {
     n->prev = n;
     n->next = (void*) ((size_t) n - offset);
-    return LIST_OK;
 }
 
 ListStatus ListNode_unlink(List *l, ListNode *node) {
@@ -34,7 +42,6 @@ ListStatus ListNode_unlink(List *l, ListNode *node) {
     return LIST_OK;
 }
 
-
 List *List_newWithOffset(size_t offset) {
     List *l = malloc(sizeof(List));
     if (!l) {
@@ -44,17 +51,6 @@ List *List_newWithOffset(size_t offset) {
     l->offset = offset;
     ListNode_initWithOffset(&l->root, offsetof(List, root));
     return l;
-}
-
-
-ListStatus insert_between(List *l, ListNode *a, ListNode *b, void *elem) {
-    ListNode *n = get_node_from_elem(l, elem);
-    a->next = elem;
-    n->prev = a;
-    n->next = b;
-    b->prev = n;
-    l->size++;
-    return LIST_OK;
 }
 
 
@@ -84,23 +80,27 @@ void *List_prev(List *l, void *elem) {
 
 ListStatus List_append(List *l, void *elem) {
     ListNode *last = l->root.prev;
-    return insert_between(l, last, &l->root, elem);
+    insert_between(l, last, &l->root, elem);
+    return LIST_OK;
 }
 
 ListStatus List_prepend(List *l, void *elem) {
     ListNode *first = get_node_from_elem(l, l->root.next);
-    return insert_between(l, &l->root, first, elem);
+    insert_between(l, &l->root, first, elem);
+    return LIST_OK;
 }
 
 ListStatus List_appendAfter(List *l, void *target, void *elem) {
     ListNode *a = get_node_from_elem(l, target);
     ListNode *b = get_node_from_elem(l, a->next);
-    return insert_between(l, a, b, elem);
+    insert_between(l, a, b, elem);
+    return LIST_OK;
 }
 
 ListStatus List_appendBefore(List *l, void *target, void *elem) {
     ListNode *b = get_node_from_elem(l, target);
-    return insert_between(l, b->prev, b, elem);
+    insert_between(l, b->prev, b, elem);
+    return LIST_OK;
 }
 
 
