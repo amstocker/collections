@@ -3,7 +3,7 @@
 
 
 static inline ListNode *get_node_from_elem(List *l, void *elem) {
-    if ((void*) l == elem) {
+    if (elem == (void*) l) {
         return &l->root;
     }
     return (ListNode*) ((size_t) elem + l->offset);
@@ -20,7 +20,7 @@ static inline void insert_between(List *l, ListNode *a, ListNode *b, void *elem)
     ListNode *n = get_node_from_elem(l, elem);
     a->next = elem;
     n->prev = a;
-    n->next = b;
+    n->next = get_elem_from_node(l, b);
     b->prev = n;
     l->size++;
 }
@@ -78,6 +78,7 @@ void *List_prev(List *l, void *elem) {
     return get_elem_from_node(l, n->prev);
 }
 
+
 ListStatus List_append(List *l, void *elem) {
     ListNode *last = l->root.prev;
     insert_between(l, last, &l->root, elem);
@@ -117,5 +118,5 @@ void *List_popHead(List *l) {
 }
 
 void *List_popTail(List *l) {
-    return List_remove(l, get_elem_from_node(l, l->root.next));
+    return List_remove(l, get_elem_from_node(l, l->root.prev));
 }
