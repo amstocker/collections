@@ -55,11 +55,11 @@ List *List_newWithOffset(size_t offset) {
 
 
 void *List_head(List *l) {
-    return List_next(l, &l->root);
+    return List_next(l, l);
 }
 
 void *List_tail(List *l) {
-    return List_prev(l, &l->root);
+    return List_prev(l, l);
 }
 
 void *List_next(List *l, void *elem) {
