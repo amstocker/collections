@@ -12,7 +12,6 @@ Counter *make_counter(char key) {
     c->count = 0;
     c->key = key;
     MapNode_init(&c->node);
-    printf("init counter(%c): %p\n", key, c);
     return c;
 }
 
@@ -28,23 +27,26 @@ int main() {
     Map *m = Map_new(Counter, node, key);
     m->cmp = comparator;
 
-    for (int i = 0; i < 128; i++) {
+    for (int i = 97; i < 123; i++) {
         counters[i] = make_counter((char)i);
         Map_add(m, counters[i]);
     }
     
-    char *string = "andrew rules! lol\n";
+    char *string = "andrew rules lol\n";
 
     char *c = string;
     Counter *counter;
     while (*c) {
+        if (*c < 'a' || *c > 'z') {
+            c++;
+            continue;
+        }
         counter = Map_get(m, c);
         counter->count++;
-        printf("next char: %c, counter: %p, count: %i\n", *c, counter, counter->count);
         c++;
     }
 
-    for (int i = 0; i < 128; i++) {
+    for (int i = 97; i < 123; i++) {
         counter = Map_get(m, (char*)&i);
         printf("%c: %i\n", (char)i, counter->count);
     }

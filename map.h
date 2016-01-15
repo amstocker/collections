@@ -29,6 +29,7 @@ typedef enum {
 } MapStatus;
 
 typedef struct MapNode {
+    void *key;
     uint32_t hash;
     struct MapNode *chain_next;
     struct MapNode *eq_next;
@@ -57,6 +58,7 @@ typedef struct {
                                                  offsetof(T, KEY))
 
 MapStatus MapNode_init(MapNode *n) {
+    n->key = NULL;
     n->hash = 0;
     n->chain_next = NULL;
     n->eq_next = NULL;
@@ -107,7 +109,6 @@ MapStatus Map_free(Map *m) {
 #define REHASH(M, E) ((size_t) (NODE(M, E)->hash \
                                 ? NODE(M, E)->hash % M->node_offset \
                                 : HASH(M, KEY(M, E)) % M->node_offset))
-#define CMPNODE(M, K, N) (m->cmp(K, KEY(M, ELEM(M, N))))
 
 
 MapStatus Map_add(Map *m, void *elem) {
@@ -116,24 +117,23 @@ MapStatus Map_add(Map *m, void *elem) {
     void *key = KEY(m, elem);
     MapNode *node = NODE(m, elem);
     uint32_t hash  = HASH(m, key);
+    node->key = key;
     node->hash = hash;
-    
+
     size_t index = hash % m->nbuckets;
     MapNode *bucket = m->buckets[index];
-    
     if (!bucket) {
         m->buckets[index] = node;
         goto ok;
     }
-    
     MapNode *next = bucket->chain_next;
-    if (!next && !CMPNODE(m, key, bucket)) {
+    if (!next && !m->cmp(key, bucket->key)) {
         m->buckets[index] = node;
         node->eq_next = bucket;
         goto ok;
     }
     while (next) {
-        if (!CMPNODE(m, key, next)) {
+        if (!m->cmp(key, bucket->key)) {
             bucket->chain_next = node;
             node->chain_next = next->chain_next;
             node->eq_next = next;
@@ -144,14 +144,17 @@ MapStatus Map_add(Map *m, void *elem) {
         next = bucket->chain_next;
     }
     bucket->chain_next = node;
-
 ok:
     m->nelements++;
     return MAP_OK;
 }
 
 void *Map_get(Map *m, void *key) {
-    return ELEM(m, m->buckets[ HASH(m, key) % m->nbuckets ]);
+    MapNode *bucket = m->buckets[ HASH(m, key) % m->nbuckets ];
+    while (bucket && m->cmp(key, bucket->key) != 0) {
+        bucket = bucket->chain_next;
+    }
+    return ELEM(m, bucket);
 }
 
 MapStatus Map_setKey(Map *m, void *elem, void *new_key) {
