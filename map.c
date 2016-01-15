@@ -2,6 +2,13 @@
 #include "hash.h"
 
 
+#define KEY(M, E) ((void*) ((size_t) E + M->key_offset))
+#define NODE(M, E) ((MapNode*) ((size_t) E + M->node_offset))
+#define ELEM(M, N) ((void *) ((size_t) N - M->node_offset))
+#define HASH(M, K) ((size_t) (M->hash(K, M->key_size)))
+#define REHASH(M, E) ((size_t) (NODE(M, E)->hash \
+                                ? NODE(M, E)->hash % M->node_offset \
+                                : HASH(M, KEY(M, E)) % M->node_offset))
 
 
 int Map_default_comparator(void *lhs, void *rhs, size_t size)
@@ -71,19 +78,9 @@ MapStatus Map_free(Map *m)
 }
 
 
-#define KEY(M, E) ((void*) ((size_t) E + M->key_offset))
-#define NODE(M, E) ((MapNode*) ((size_t) E + M->node_offset))
-#define ELEM(M, N) ((void *) ((size_t) N - M->node_offset))
-#define HASH(M, K) ((size_t) (M->hash(K, M->key_size)))
-#define REHASH(M, E) ((size_t) (NODE(M, E)->hash \
-                                ? NODE(M, E)->hash % M->node_offset \
-                                : HASH(M, KEY(M, E)) % M->node_offset))
-
-
 MapStatus Map_add(Map *m, void *elem)
 {
     //if (maybe_rehash(m) == MAP_ERR) return MAP_ERR;
-    
     void *key = KEY(m, elem);
     MapNode *node = NODE(m, elem);
     uint32_t hash  = HASH(m, key);
@@ -100,7 +97,7 @@ MapStatus Map_add(Map *m, void *elem)
     if (!next && !m->cmp(key, bucket->key, m->key_size)) {
         m->buckets[index] = node;
         node->eq_next = bucket;
-        goto ok;
+        goto eq;
     }
     while (next) {
         if (!m->cmp(key, bucket->key, m->key_size)) {
@@ -108,7 +105,7 @@ MapStatus Map_add(Map *m, void *elem)
             node->chain_next = next->chain_next;
             node->eq_next = next;
             next->chain_next = NULL;
-            goto ok;
+            goto eq;
         }
         bucket = next;
         next = bucket->chain_next;
@@ -117,6 +114,7 @@ MapStatus Map_add(Map *m, void *elem)
 
 ok:
     m->nelements++;
+eq:
     return MAP_OK;
 }
 
@@ -124,16 +122,35 @@ ok:
 void *Map_get(Map *m, void *key)
 {
     MapNode *bucket = m->buckets[ HASH(m, key) % m->nbuckets ];
-    while (bucket &&
-           m->cmp(key, bucket->key, m->key_size) != 0)
-    {
+    while (bucket) {
+        if (m->cmp(key, bucket->key, m->key_size) == 0) {
+            return ELEM(m, bucket);
+        }
         bucket = bucket->chain_next;
     }
-    return ELEM(m, bucket);
+    return NULL;
 }
 
 
 MapStatus Map_setKey(Map *m, void *elem, void *new_key)
 {
     return MAP_OK;
+}
+
+
+void **Map_items(Map *m) {
+    void **elems = calloc(m->nelements, sizeof(void*));
+    if (!elems) {
+        return NULL;
+    }
+    void **elem = elems;
+    MapNode *n;
+    for (int i = 0; i < m->nbuckets; i++) {
+        n = m->buckets[i];
+        while (n) {
+            *elem++ = ELEM(m, n);
+            n = n->chain_next;
+        }
+    }
+    return elems;
 }

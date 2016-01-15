@@ -4,10 +4,14 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "hash.h"
+
 
 typedef uint32_t (*Map_HashFunc) (void *key, size_t size);
 #define Map_default_hash Hash_fnv;
 #define Map_string_hash Hash_djb2;
+//const Map_HashFunc Map_default_hash = Hash_fnv;
+//const Map_HashFunc Map_string_hash = Hash_djb2;
 
 typedef int (*Map_Comparator) (void *lhs, void *rhs, size_t size);
 int Map_default_comparator(void*, void*, size_t);
@@ -58,3 +62,4 @@ MapStatus Map_free(Map *m);
 MapStatus Map_add(Map *m, void *elem);
 void *Map_get(Map *m, void *key);
 MapStatus Map_setKey(Map *m, void *elem, void *new_key);
+void **Map_items(Map *m);

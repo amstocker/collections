@@ -1,54 +1,54 @@
 #include <stdio.h>
 #include "map.h"
 
+
 typedef struct {
     int count;
-    char key;
+    char key[64];
     MapNode node;
 } Counter;
 
-Counter *make_counter(char key) {
+Counter *make_counter(char *key) {
     Counter *c = malloc(sizeof(Counter));
     c->count = 0;
-    c->key = key;
+    strcpy(c->key, key);
     MapNode_init(&c->node);
     return c;
 }
 
-int comparator(void *lhs, void *rhs, size_t _) {
-    char a = *(char*)lhs;
-    char b = *(char*)rhs;
-    return a < b ? -1 : a > b ? 1 : 0;
+char *read_until_space(char *buf, char *str) {
+    while (*str && *str != ' ') {
+        *buf++ = *str++;
+    }
+    return str;
 }
 
 
 int main() {
-    Counter *counters[128] = {NULL};
-    Map *m = Map_new(Counter, node, key);
-    m->cmp = comparator;
-
-    for (int i = 97; i < 123; i++) {
-        counters[i] = make_counter((char)i);
-        Map_add(m, counters[i]);
-    }
+    Map *m = StringMap_new(Counter, node, key);
     
-    char *string = "andrew rules lol\n";
+    char *string = "andrew rules lol he is super cool!";
 
+    char buf[64];
     char *c = string;
     Counter *counter;
     while (*c) {
-        if (*c < 'a' || *c > 'z') {
-            c++;
-            continue;
+        memset(buf, 0, sizeof(buf));
+        c = read_until_space(buf, c);
+        
+        counter = Map_get(m, buf);
+        if (!counter) {
+            counter = make_counter(buf);
+            Map_add(m, counter);
         }
-        counter = Map_get(m, c);
         counter->count++;
-        c++;
+        if (*c) c++;
     }
 
-    for (int i = 97; i < 123; i++) {
-        counter = Map_get(m, (char*)&i);
-        printf("%c: %i\n", (char)i, counter->count);
+    void **elems = Map_items(m);
+    for (int i = 0; i < m->nelements; i++) {
+        counter = elems[i];
+        printf("%s: %i\n", counter->key, counter->count);
     }
 
     return 0;
