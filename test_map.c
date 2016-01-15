@@ -13,6 +13,7 @@ Counter *make_counter(char *key) {
     c->count = 0;
     strcpy(c->key, key);
     MapNode_init(&c->node);
+    printf("make counter: %s, %p, %p\n", key, c, &c->node);
     return c;
 }
 
@@ -50,6 +51,9 @@ int main() {
         counter = elems[i];
         printf("%s: %i\n", counter->key, counter->count);
     }
+
+    counter = Map_remove(m, "andrew");
+    printf("removed 'andrew': %s, %i\n", counter->key, counter->count);
 
     return 0;
 }

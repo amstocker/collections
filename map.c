@@ -22,8 +22,10 @@ int Map_default_comparator(void *lhs, void *rhs, size_t size)
 }
 
 
+#include <stdio.h>
 int Map_string_comparator(void *lhs, void *rhs, size_t _)
 {
+    printf("comparing strings: %s vs. %s\n", (char*) lhs, (char*) rhs);
     return strcmp((char*) lhs, (char*) rhs);
 }
 
@@ -78,6 +80,14 @@ MapStatus Map_free(Map *m)
 }
 
 
+/**
+ * Adds an element to the map.  It either become the head of a bucket or
+ * gets added in a linked list.  If the key is equal to the key of an existing
+ * element it will be added to a linked list accessible by:
+ *
+ *  MapNode *next = elem->node->eq_next;
+ *
+ **/
 MapStatus Map_add(Map *m, void *elem)
 {
     //if (maybe_rehash(m) == MAP_ERR) return MAP_ERR;
@@ -119,6 +129,10 @@ eq:
 }
 
 
+/**
+ * Gets the head of a linked list of elements with equal keys.  The head of the
+ * list will be the most recently inserted.
+ */
 void *Map_get(Map *m, void *key)
 {
     MapNode *bucket = m->buckets[ HASH(m, key) % m->nbuckets ];
@@ -132,9 +146,136 @@ void *Map_get(Map *m, void *key)
 }
 
 
-MapStatus Map_setKey(Map *m, void *elem, void *new_key)
+
+static void unlink_anchor(Map *m, uint32_t index, MapNode *anchor)
 {
-    return MAP_OK;
+    if (anchor->eq_next) {
+        m->buckets[index] = anchor->eq_next;
+        anchor->eq_next = NULL;
+    } else {
+        m->buckets[index] = NULL;
+    }
+}
+
+static void unlink_anchor_all(Map *m, uint32_t index, MapNode *anchor)
+{
+        m->buckets[index] = NULL;
+}
+
+static void unlink_next(Map *m, MapNode *prev)
+{
+    MapNode *next = prev->chain_next;
+    if (next->eq_next) {
+        prev->chain_next = next->eq_next;
+        next->eq_next->chain_next = next->chain_next;
+        next->eq_next = NULL;
+    } else {
+        prev->chain_next = next->chain_next;
+    }
+    next->chain_next = NULL;
+}
+
+static void unlink_next_all(Map *m, MapNode *prev)
+{
+    MapNode *next = prev->chain_next;
+    prev->chain_next = next->chain_next;
+    next->chain_next = NULL;
+}
+
+typedef void (*anchor_unlinker) (Map*, uint32_t, MapNode*);
+typedef void (*bucket_unlinker) (Map*, MapNode*);
+
+
+static void *remover(Map *m, void *key,
+                     anchor_unlinker au,
+                     bucket_unlinker bu)
+{
+    uint32_t index = HASH(m, key) % m->nbuckets;
+    MapNode *bucket = m->buckets[index];
+    printf("inside remover: %s, %p\n", (char*) key, bucket);
+    printf("bucket: %p, next: %i, cmp: %i\n", bucket, !bucket->chain_next, m->cmp(key, bucket->key, m->key_size));
+    if (bucket
+        && !bucket->chain_next
+        && m->cmp(key, bucket->key, m->key_size) == 0)
+    {
+        printf("removing anchor\n");
+        au(m, index, bucket);
+        goto ok;
+    } else {
+        goto err;
+    }
+    MapNode *next;
+    printf("while...\n");
+    while (bucket) {
+        printf("comparing bucket\n");
+        next = bucket->chain_next;
+        if (!next) {
+            goto err;
+        }
+        if (m->cmp(key, next->key, m->key_size) == 0) {
+            printf("removing!\n");
+            bu(m, bucket);
+            bucket = next;
+            goto ok;
+        }
+        bucket = bucket->chain_next;
+    }
+err:
+    return NULL;
+ok:
+    m->nelements--;
+    printf("returning: %p\n", bucket);
+    return ELEM(m, bucket);
+}
+
+/**
+ * Removes a single element corresponding to a given key, this will be
+ * the last element added with that key.
+ */
+void *Map_remove(Map *m, void *key)
+{
+    return remover(m, key, unlink_anchor, unlink_next);
+}
+
+
+/**
+ * Removes the entire linked list corresponding to one key.
+ */
+void *Map_remove_all(Map *m, void *key)
+{
+    return remover(m, key, unlink_anchor_all, unlink_next_all);
+}
+
+
+MapStatus Map_update(Map *m, void *elem)
+{
+    uint32_t index = HASH(m, KEY(m, elem)) % m->nbuckets;
+    MapNode *bucket = m->buckets[index];
+    if (bucket
+        && !bucket->chain_next
+        && elem == ELEM(m, bucket))
+    {
+        unlink_anchor(m, index, bucket);
+        goto ok;
+    } else {
+        goto err;
+    }
+    MapNode *next;
+    while (bucket) {
+        next = bucket->chain_next;
+        if (!next) {
+            goto err;
+        }
+        if (elem == ELEM(m, next)) {
+            unlink_next(m, bucket);
+            goto ok;
+        }
+        bucket = bucket->chain_next;
+    }
+err:
+    return MAP_ERR;
+ok:
+    return Map_add(m, elem);
 }
 
 

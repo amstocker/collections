@@ -4,8 +4,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "hash.h"
-
 
 typedef uint32_t (*Map_HashFunc) (void *key, size_t size);
 #define Map_default_hash Hash_fnv;
@@ -61,5 +59,7 @@ Map *StringMap_newWithOffsets(size_t node_offset, size_t key_offset);
 MapStatus Map_free(Map *m);
 MapStatus Map_add(Map *m, void *elem);
 void *Map_get(Map *m, void *key);
-MapStatus Map_setKey(Map *m, void *elem, void *new_key);
+void *Map_remove(Map *m, void *key);
+void *Map_remove_all(Map *m, void *key);
+MapStatus Map_changeKey(Map *m, void *elem, void *new_key);
 void **Map_items(Map *m);
