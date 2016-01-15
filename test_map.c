@@ -15,7 +15,7 @@ Counter *make_counter(char key) {
     return c;
 }
 
-int comparator(void *lhs, void *rhs) {
+int comparator(void *lhs, void *rhs, size_t _) {
     char a = *(char*)lhs;
     char b = *(char*)rhs;
     return a < b ? -1 : a > b ? 1 : 0;
