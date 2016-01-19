@@ -2,9 +2,11 @@
 #include "map.h"
 
 
+#define BUF_SIZE 64
+
 typedef struct {
     int count;
-    char key[64];
+    char key[BUF_SIZE];
     MapNode node;
 } Counter;
 
@@ -26,7 +28,7 @@ char *read_until_space(char *buf, char *str) {
 }
 
 void add_words(Map *m, char *string) {
-    char buf[64];
+    char buf[BUF_SIZE];
     char *c = string;
     Counter *counter;
     while (*c) {
@@ -72,9 +74,15 @@ int main() {
     add_words(m, "andrew rules lol he is super cool!");
     print_words(m);
 
-    Counter *counter = Map_remove(m, "andrew");
-    printf("removed 'andrew'; mapsize: %lu\n", m->nelements);
+    Counter *counter = Map_remove(m, "super");
+    printf("removed 'super'; mapsize: %lu\n", m->nelements);
     free(counter);
+
+    counter = Map_get(m, "lol");
+    memset(counter->key, 0, BUF_SIZE);
+    strcpy(counter->key, "LOL");
+    printf("updated key for %p: %s\n", counter, counter->key);
+    Map_update(m, counter);
 
     print_words(m);
 

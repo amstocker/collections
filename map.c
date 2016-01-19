@@ -1,8 +1,6 @@
 #include "map.h"
 
 
-static void *remove_elem(Map *m, void *key, Map_Comparator cmp, int all);
-
 #define KEY(M, E) ((void*) ((size_t) E + M->key_offset))
 #define NODE(M, E) ((MapNode*) ((size_t) E + M->node_offset))
 #define ELEM(M, N) ((void *) ((size_t) N - M->node_offset))
@@ -10,6 +8,10 @@ static void *remove_elem(Map *m, void *key, Map_Comparator cmp, int all);
 #define REHASH(M, E) ((size_t) (NODE(M, E)->hash \
                                 ? NODE(M, E)->hash % M->node_offset \
                                 : HASH(M, KEY(M, E)) % M->node_offset))
+
+static size_t chain_len(MapNode *bucket);
+static size_t eq_len(MapNode *bucket);
+static void *remove_elem(Map *m, void *key, Map_Comparator cmp, int all);
 
 
 int Map_default_comparator(void *lhs, void *rhs, size_t size)
@@ -104,32 +106,28 @@ MapStatus Map_add(Map *m, void *elem)
 
     size_t index = hash % m->nbuckets;
     MapNode *bucket = m->buckets[index];
+    MapNode *prev = NULL;
     if (!bucket) {
         m->buckets[index] = node;
-        goto ok;
-    }
-    MapNode *next = bucket->chain_next;
-    if (!next && !m->cmp(key, bucket->key, m->key_size)) {
-        m->buckets[index] = node;
-        node->eq_next = bucket;
-        goto eq;
-    }
-    while (next) {
-        if (!m->cmp(key, bucket->key, m->key_size)) {
-            bucket->chain_next = node;
-            node->chain_next = next->chain_next;
-            node->eq_next = next;
-            next->chain_next = NULL;
-            goto eq;
+    } else {
+        while (bucket) {
+            if (!m->cmp(key, bucket->key, m->key_size)) {
+                if (!prev) {
+                    m->buckets[index] = node;
+                } else {
+                    prev->chain_next = node;
+                }
+                node->chain_next = bucket->chain_next;
+                bucket->chain_next = NULL;
+                node->eq_next = bucket;
+                break;
+            }
+            prev = bucket;
+            bucket = bucket->chain_next;
         }
-        bucket = next;
-        next = bucket->chain_next;
+        prev->chain_next = node;
     }
-    bucket->chain_next = node;
-
-ok:
     m->nelements++;
-eq:
     return MAP_OK;
 }
 
@@ -204,6 +202,26 @@ void **Map_items(Map *m) {
 }
 
 
+static size_t chain_len(MapNode *bucket) {
+    size_t len = 0;
+    while (bucket) {
+        len++;
+        bucket = bucket->chain_next;
+    }
+    return len;
+}
+
+
+static size_t eq_len(MapNode *bucket) {
+    size_t len = 0;
+    while (bucket) {
+        len++;
+        bucket = bucket->eq_next;
+    }
+    return len;
+}
+
+
 static void *remove_elem(Map *m, void *key, Map_Comparator cmp, int all)
 {
     uint32_t index = HASH(m, key) % m->nbuckets;
@@ -239,13 +257,15 @@ static void *remove_elem(Map *m, void *key, Map_Comparator cmp, int all)
                 }
                 bucket->chain_next = NULL;       
             }
-            goto ok;
+            if (all) {
+                m->nelements -= eq_len(bucket);
+            } else {
+                m->nelements--;
+            }
+            return ELEM(m, bucket);
         }
         prev = bucket;
         bucket = bucket->chain_next;
     }
     return NULL;
-ok:
-    m->nelements--;
-    return ELEM(m, bucket);
 }
