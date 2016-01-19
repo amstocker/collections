@@ -41,6 +41,8 @@ typedef struct {
 
 
 #define MAP_INIT_SIZE 11
+#define MAP_HIGH_WATERMARK 0.7
+#define MAP_LOW_WATERMARK 0.3
 
 #define Map_new(T, NODE, KEY) Map_newWithOffsets(offsetof(T, NODE), \
                                                  offsetof(T, KEY), \

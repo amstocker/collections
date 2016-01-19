@@ -5,13 +5,12 @@
 #define NODE(M, E) ((MapNode*) ((size_t) E + M->node_offset))
 #define ELEM(M, N) ((void *) ((size_t) N - M->node_offset))
 #define HASH(M, K) ((size_t) (M->hash(K, M->key_size)))
-#define REHASH(M, E) ((size_t) (NODE(M, E)->hash \
-                                ? NODE(M, E)->hash % M->node_offset \
-                                : HASH(M, KEY(M, E)) % M->node_offset))
 
 static size_t chain_len(MapNode *bucket);
 static size_t eq_len(MapNode *bucket);
+static MapStatus add_node(Map *m, MapNode *node);
 static void *remove_elem(Map *m, void *key, Map_Comparator cmp, int all);
+static MapStatus maybe_rehash(Map *m);
 
 
 int Map_default_comparator(void *lhs, void *rhs, size_t size)
@@ -104,14 +103,22 @@ MapStatus Map_add(Map *m, void *elem)
     node->key = key;
     node->hash = hash;
 
-    size_t index = hash % m->nbuckets;
+    if (add_node(m, node) == MAP_ERR) return MAP_ERR;
+
+    m->nelements++;
+    return MAP_OK;
+}
+
+static MapStatus add_node(Map *m, MapNode *node)
+{
+    size_t index = node->hash % m->nbuckets;
     MapNode *bucket = m->buckets[index];
     MapNode *prev = NULL;
     if (!bucket) {
         m->buckets[index] = node;
     } else {
         while (bucket) {
-            if (!m->cmp(key, bucket->key, m->key_size)) {
+            if (!m->cmp(node->key, bucket->key, m->key_size)) {
                 if (!prev) {
                     m->buckets[index] = node;
                 } else {
@@ -127,7 +134,6 @@ MapStatus Map_add(Map *m, void *elem)
         }
         prev->chain_next = node;
     }
-    m->nelements++;
     return MAP_OK;
 }
 
@@ -268,4 +274,10 @@ static void *remove_elem(Map *m, void *key, Map_Comparator cmp, int all)
         bucket = bucket->chain_next;
     }
     return NULL;
+}
+
+
+static MapStatus maybe_rehash(Map *m)
+{
+    return MAP_OK;    
 }
