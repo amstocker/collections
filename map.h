@@ -3,16 +3,16 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include "hash.h"
 
 
 typedef uint32_t (*Map_HashFunc) (void *key, size_t size);
-#define Map_default_hash Hash_fnv;
-#define Map_string_hash Hash_djb2;
-//const Map_HashFunc Map_default_hash = Hash_fnv;
-//const Map_HashFunc Map_string_hash = Hash_djb2;
+#define Map_default_hash Hash_fnv
+#define Map_string_hash Hash_djb2
 
 typedef int (*Map_Comparator) (void *lhs, void *rhs, size_t size);
 int Map_default_comparator(void*, void*, size_t);
+int Map_strict_comparator(void*, void*, size_t);
 int Map_string_comparator(void*, void*, size_t);
 
 

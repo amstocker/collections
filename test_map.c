@@ -17,6 +17,7 @@ Counter *make_counter(char *key) {
     return c;
 }
 
+
 char *read_until_space(char *buf, char *str) {
     while (*str && *str != ' ') {
         *buf++ = *str++;
@@ -24,12 +25,7 @@ char *read_until_space(char *buf, char *str) {
     return str;
 }
 
-
-int main() {
-    Map *m = StringMap_new(Counter, node, key);
-    
-    char *string = "andrew rules lol he is super cool!";
-
+void add_words(Map *m, char *string) {
     char buf[64];
     char *c = string;
     Counter *counter;
@@ -43,17 +39,45 @@ int main() {
             Map_add(m, counter);
         }
         counter->count++;
+        printf("added: %s, count: %i, mapsize: %lu\n", buf, counter->count, m->nelements);
         if (*c) c++;
     }
+}
 
+void print_words(Map *m) {
     void **elems = Map_items(m);
+    Counter *counter;
     for (int i = 0; i < m->nelements; i++) {
         counter = elems[i];
         printf("%s: %i\n", counter->key, counter->count);
     }
+    free(elems);
+}
 
-    counter = Map_remove(m, "andrew");
-    printf("removed 'andrew': %s, %i\n", counter->key, counter->count);
+void free_all(Map *m) {
+    void **elems = Map_items(m);
+    Counter *counter;
+    for (int i = 0; i < m->nelements; i++) {
+        counter = elems[i];
+        free(counter);
+    }
+    free(elems);
+    Map_free(m);
+}
 
+
+int main() {
+    Map *m = StringMap_new(Counter, node, key);
+    
+    add_words(m, "andrew rules lol he is super cool!");
+    print_words(m);
+
+    Counter *counter = Map_remove(m, "andrew");
+    printf("removed 'andrew'; mapsize: %lu\n", m->nelements);
+    free(counter);
+
+    print_words(m);
+
+    free_all(m);
     return 0;
 }

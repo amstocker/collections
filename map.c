@@ -1,6 +1,7 @@
 #include "map.h"
-#include "hash.h"
 
+
+static void *remove_elem(Map *m, void *key, Map_Comparator cmp, int all);
 
 #define KEY(M, E) ((void*) ((size_t) E + M->key_offset))
 #define NODE(M, E) ((MapNode*) ((size_t) E + M->node_offset))
@@ -22,10 +23,14 @@ int Map_default_comparator(void *lhs, void *rhs, size_t size)
 }
 
 
-#include <stdio.h>
+int Map_strict_comparator(void *lhs, void *rhs, size_t _)
+{
+    return (int) ((size_t) lhs - (size_t) rhs);
+}
+
+
 int Map_string_comparator(void *lhs, void *rhs, size_t _)
 {
-    printf("comparing strings: %s vs. %s\n", (char*) lhs, (char*) rhs);
     return strcmp((char*) lhs, (char*) rhs);
 }
 
@@ -146,95 +151,13 @@ void *Map_get(Map *m, void *key)
 }
 
 
-
-static void unlink_anchor(Map *m, uint32_t index, MapNode *anchor)
-{
-    if (anchor->eq_next) {
-        m->buckets[index] = anchor->eq_next;
-        anchor->eq_next = NULL;
-    } else {
-        m->buckets[index] = NULL;
-    }
-}
-
-static void unlink_anchor_all(Map *m, uint32_t index, MapNode *anchor)
-{
-        m->buckets[index] = NULL;
-}
-
-static void unlink_next(Map *m, MapNode *prev)
-{
-    MapNode *next = prev->chain_next;
-    if (next->eq_next) {
-        prev->chain_next = next->eq_next;
-        next->eq_next->chain_next = next->chain_next;
-        next->eq_next = NULL;
-    } else {
-        prev->chain_next = next->chain_next;
-    }
-    next->chain_next = NULL;
-}
-
-static void unlink_next_all(Map *m, MapNode *prev)
-{
-    MapNode *next = prev->chain_next;
-    prev->chain_next = next->chain_next;
-    next->chain_next = NULL;
-}
-
-typedef void (*anchor_unlinker) (Map*, uint32_t, MapNode*);
-typedef void (*bucket_unlinker) (Map*, MapNode*);
-
-
-static void *remover(Map *m, void *key,
-                     anchor_unlinker au,
-                     bucket_unlinker bu)
-{
-    uint32_t index = HASH(m, key) % m->nbuckets;
-    MapNode *bucket = m->buckets[index];
-    printf("inside remover: %s, %p\n", (char*) key, bucket);
-    printf("bucket: %p, next: %i, cmp: %i\n", bucket, !bucket->chain_next, m->cmp(key, bucket->key, m->key_size));
-    if (bucket
-        && !bucket->chain_next
-        && m->cmp(key, bucket->key, m->key_size) == 0)
-    {
-        printf("removing anchor\n");
-        au(m, index, bucket);
-        goto ok;
-    } else {
-        goto err;
-    }
-    MapNode *next;
-    printf("while...\n");
-    while (bucket) {
-        printf("comparing bucket\n");
-        next = bucket->chain_next;
-        if (!next) {
-            goto err;
-        }
-        if (m->cmp(key, next->key, m->key_size) == 0) {
-            printf("removing!\n");
-            bu(m, bucket);
-            bucket = next;
-            goto ok;
-        }
-        bucket = bucket->chain_next;
-    }
-err:
-    return NULL;
-ok:
-    m->nelements--;
-    printf("returning: %p\n", bucket);
-    return ELEM(m, bucket);
-}
-
 /**
  * Removes a single element corresponding to a given key, this will be
  * the last element added with that key.
  */
 void *Map_remove(Map *m, void *key)
 {
-    return remover(m, key, unlink_anchor, unlink_next);
+    return remove_elem(m, key, m->cmp, 0);
 }
 
 
@@ -243,42 +166,26 @@ void *Map_remove(Map *m, void *key)
  */
 void *Map_remove_all(Map *m, void *key)
 {
-    return remover(m, key, unlink_anchor_all, unlink_next_all);
+    return remove_elem(m, key, m->cmp, 1);
 }
 
 
+/**
+ * Updates an element.
+ */
 MapStatus Map_update(Map *m, void *elem)
 {
-    uint32_t index = HASH(m, KEY(m, elem)) % m->nbuckets;
-    MapNode *bucket = m->buckets[index];
-    if (bucket
-        && !bucket->chain_next
-        && elem == ELEM(m, bucket))
-    {
-        unlink_anchor(m, index, bucket);
-        goto ok;
-    } else {
-        goto err;
+    elem = remove_elem(m, KEY(m, elem), Map_strict_comparator, 0);
+    if (elem) {
+        return Map_add(m, elem);
     }
-    MapNode *next;
-    while (bucket) {
-        next = bucket->chain_next;
-        if (!next) {
-            goto err;
-        }
-        if (elem == ELEM(m, next)) {
-            unlink_next(m, bucket);
-            goto ok;
-        }
-        bucket = bucket->chain_next;
-    }
-err:
     return MAP_ERR;
-ok:
-    return Map_add(m, elem);
 }
 
 
+/**
+ * Returns an array of all items in the Map.
+ */
 void **Map_items(Map *m) {
     void **elems = calloc(m->nelements, sizeof(void*));
     if (!elems) {
@@ -294,4 +201,51 @@ void **Map_items(Map *m) {
         }
     }
     return elems;
+}
+
+
+static void *remove_elem(Map *m, void *key, Map_Comparator cmp, int all)
+{
+    uint32_t index = HASH(m, key) % m->nbuckets;
+    MapNode *bucket = m->buckets[index];
+    MapNode *prev = NULL;
+    while (bucket) {
+        if (cmp(key, bucket->key, m->key_size) == 0) {
+            if (!prev) {
+                if (all) {
+                    m->buckets[index] = bucket->chain_next;
+                    bucket->chain_next = NULL;
+                } else {
+                    if (bucket->eq_next) {
+                        m->buckets[index] = bucket->eq_next;
+                        bucket->eq_next->chain_next = bucket->chain_next;
+                        bucket->eq_next = NULL;
+                        bucket->chain_next = NULL;
+                    } else {
+                        m->buckets[index] = bucket->chain_next;
+                    }
+                }
+            } else {
+                if (all) {
+                    prev->chain_next = bucket->chain_next;
+                } else {
+                    if (bucket->eq_next) {
+                        prev->chain_next = bucket->eq_next;
+                        bucket->eq_next->chain_next = bucket->chain_next;
+                        bucket->eq_next = NULL;
+                    } else {
+                        prev->chain_next = bucket->chain_next;
+                    }
+                }
+                bucket->chain_next = NULL;       
+            }
+            goto ok;
+        }
+        prev = bucket;
+        bucket = bucket->chain_next;
+    }
+    return NULL;
+ok:
+    m->nelements--;
+    return ELEM(m, bucket);
 }
