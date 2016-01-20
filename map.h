@@ -40,6 +40,7 @@ typedef struct {
 
 
 #define MAP_INIT_SIZE 4
+#define MAP_HIGH_WATERMARK 0.7
 
 #define Map_new(T, NODE, KEY) Map_newWithOffsets(offsetof(T, NODE), \
                                                  offsetof(T, KEY), \
@@ -50,7 +51,9 @@ typedef struct {
                                                  offsetof(T, KEY))
 
 #define Map_size(M) (M->nelements)
+#define Map_capacity(M) ((size_t) (M->nbuckets * MAP_HIGH_WATERMARK))
 #define Map_filled(M) ((float) M->nelements / M->nbuckets)
+
 
 MapStatus MapNode_init(MapNode *n);
 Map *Map_newWithOffsets(size_t node_offset,

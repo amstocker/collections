@@ -1,7 +1,6 @@
 #include "map.h"
 
 
-#define HIGH_WATERMARK 0.7
 #define SIZEUP(N) (((N) * 2) - 1)
 
 #define KEY(M, E) ((void*) ((size_t) E + M->key_offset))
@@ -182,7 +181,7 @@ static void *remove_elem(Map *m, void *key)
 
 static MapStatus maybe_rehash(Map *m)
 {
-    if ((float) m->nelements / m->nbuckets < HIGH_WATERMARK) {
+    if ((float) m->nelements / m->nbuckets < MAP_HIGH_WATERMARK) {
         return MAP_OK;
     }
     size_t old_size = m->nbuckets;
