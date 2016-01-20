@@ -11,11 +11,12 @@ typedef struct {
 } Counter;
 
 Counter *make_counter(char *key) {
+    printf("make_counter(\"%s\"):\n", key);
     Counter *c = malloc(sizeof(Counter));
     c->count = 0;
     strcpy(c->key, key);
     MapNode_init(&c->node);
-    printf("make counter: %s, %p, %p\n", key, c, &c->node);
+    printf("\t%p\n", c);
     return c;
 }
 
@@ -28,6 +29,7 @@ char *read_until_space(char *buf, char *str) {
 }
 
 void add_words(Map *m, char *string) {
+    printf("add_words(\"%s\"):\n", string);
     char buf[BUF_SIZE];
     char *c = string;
     Counter *counter;
@@ -39,9 +41,11 @@ void add_words(Map *m, char *string) {
         if (!counter) {
             counter = make_counter(buf);
             Map_add(m, counter);
+        } else {
+            printf("\tcounter for '%s' already exists!\n", buf);
         }
         counter->count++;
-        printf("added: %s, count: %i, mapsize: %lu\n", buf, counter->count, m->nelements);
+        printf("\tadded: %s, count: %i, mapsize: %lu\n", buf, counter->count, m->nelements);
         if (*c) c++;
     }
 }
@@ -49,9 +53,10 @@ void add_words(Map *m, char *string) {
 void print_words(Map *m) {
     void **elems = Map_items(m);
     Counter *counter;
+    printf("map contents:\n");
     for (int i = 0; i < m->nelements; i++) {
         counter = elems[i];
-        printf("%s: %i\n", counter->key, counter->count);
+        printf("\t%s: %i\n", counter->key, counter->count);
     }
     free(elems);
 }
@@ -75,14 +80,12 @@ int main() {
     print_words(m);
 
     Counter *counter = Map_remove(m, "super");
-    printf("removed 'super'; mapsize: %lu\n", m->nelements);
+    printf("MAIN: removed 'super'; mapsize: %lu\n", m->nelements);
     free(counter);
 
-    counter = Map_get(m, "lol");
-    memset(counter->key, 0, BUF_SIZE);
-    strcpy(counter->key, "LOL");
-    printf("updated key for %p: %s\n", counter, counter->key);
-    Map_update(m, counter);
+    print_words(m);
+
+    add_words(m, "andrew does not suck lol LOL haha he super rules");
 
     print_words(m);
 

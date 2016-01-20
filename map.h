@@ -63,5 +63,4 @@ MapStatus Map_add(Map *m, void *elem);
 void *Map_get(Map *m, void *key);
 void *Map_remove(Map *m, void *key);
 void *Map_remove_all(Map *m, void *key);
-MapStatus Map_update(Map *m, void *elem);
 void **Map_items(Map *m);

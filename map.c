@@ -26,7 +26,7 @@ int Map_default_comparator(void *lhs, void *rhs, size_t size)
 
 int Map_strict_comparator(void *lhs, void *rhs, size_t _)
 {
-    return (int) ((size_t) lhs - (size_t) rhs);
+    return (int) !(lhs == rhs);
 }
 
 
@@ -171,19 +171,6 @@ void *Map_remove(Map *m, void *key)
 void *Map_remove_all(Map *m, void *key)
 {
     return remove_elem(m, key, m->cmp, 1);
-}
-
-
-/**
- * Updates an element.
- */
-MapStatus Map_update(Map *m, void *elem)
-{
-    elem = remove_elem(m, KEY(m, elem), Map_strict_comparator, 0);
-    if (elem) {
-        return Map_add(m, elem);
-    }
-    return MAP_ERR;
 }
 
 
