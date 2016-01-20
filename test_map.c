@@ -4,6 +4,24 @@
 
 #define BUF_SIZE 64
 
+void print_diag(Map *m) {
+    size_t tot_len = 0;
+    MapNode *bucket;
+    for (size_t i = 0; i < m->nbuckets; i++) {
+        bucket = m->buckets[i];
+        if (!bucket) {
+            continue;
+        }
+        while ((bucket = bucket->next)) tot_len++;
+    }
+    printf("DIAG:\n\tsize: %lu, buckets: %lu, filled: %f, avg_chain: %f\n",
+            Map_size(m),
+            m->nbuckets,
+            Map_filled(m),
+            (float) tot_len / m->nbuckets);
+}
+
+
 typedef struct {
     int count;
     char key[BUF_SIZE];
@@ -40,7 +58,7 @@ void add_words(Map *m, char *string) {
             Map_add(m, counter);
         }
         counter->count++;
-        printf("add_words: %s (%u), count: %i, mapsize: %lu, buckets: %lu, fill: %f\n", buf, counter->node.hash, counter->count, Map_size(m), m->nbuckets, Map_filled(m));
+        print_diag(m);
         if (*c) c++;
     }
 }
