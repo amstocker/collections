@@ -24,8 +24,7 @@ typedef enum {
 typedef struct MapNode {
     void *key;
     uint32_t hash;
-    struct MapNode *chain_next;
-    struct MapNode *eq_next;
+    struct MapNode *next;
 } MapNode;
 
 typedef struct {
@@ -40,9 +39,7 @@ typedef struct {
 } Map;
 
 
-#define MAP_INIT_SIZE 11
-#define MAP_HIGH_WATERMARK 0.7
-#define MAP_LOW_WATERMARK 0.3
+#define MAP_INIT_SIZE 4
 
 #define Map_new(T, NODE, KEY) Map_newWithOffsets(offsetof(T, NODE), \
                                                  offsetof(T, KEY), \
@@ -52,6 +49,8 @@ typedef struct {
                                                  offsetof(T, NODE), \
                                                  offsetof(T, KEY))
 
+#define Map_size(M) (M->nelements)
+#define Map_filled(M) ((float) M->nelements / M->nbuckets)
 
 MapStatus MapNode_init(MapNode *n);
 Map *Map_newWithOffsets(size_t node_offset,
@@ -62,5 +61,4 @@ MapStatus Map_free(Map *m);
 MapStatus Map_add(Map *m, void *elem);
 void *Map_get(Map *m, void *key);
 void *Map_remove(Map *m, void *key);
-void *Map_remove_all(Map *m, void *key);
 void **Map_items(Map *m);

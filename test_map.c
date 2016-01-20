@@ -11,12 +11,10 @@ typedef struct {
 } Counter;
 
 Counter *make_counter(char *key) {
-    printf("make_counter(\"%s\"):\n", key);
     Counter *c = malloc(sizeof(Counter));
     c->count = 0;
     strcpy(c->key, key);
     MapNode_init(&c->node);
-    printf("\t%p\n", c);
     return c;
 }
 
@@ -29,7 +27,6 @@ char *read_until_space(char *buf, char *str) {
 }
 
 void add_words(Map *m, char *string) {
-    printf("add_words(\"%s\"):\n", string);
     char buf[BUF_SIZE];
     char *c = string;
     Counter *counter;
@@ -41,11 +38,9 @@ void add_words(Map *m, char *string) {
         if (!counter) {
             counter = make_counter(buf);
             Map_add(m, counter);
-        } else {
-            printf("\tcounter for '%s' already exists!\n", buf);
         }
         counter->count++;
-        printf("\tadded: %s, count: %i, mapsize: %lu\n", buf, counter->count, m->nelements);
+        printf("add_words: %s (%u), count: %i, mapsize: %lu, buckets: %lu, fill: %f\n", buf, counter->node.hash, counter->count, Map_size(m), m->nbuckets, Map_filled(m));
         if (*c) c++;
     }
 }
@@ -53,10 +48,9 @@ void add_words(Map *m, char *string) {
 void print_words(Map *m) {
     void **elems = Map_items(m);
     Counter *counter;
-    printf("map contents:\n");
     for (int i = 0; i < m->nelements; i++) {
         counter = elems[i];
-        printf("\t%s: %i\n", counter->key, counter->count);
+        printf("print_words: %s: %i\n", counter->key, counter->count);
     }
     free(elems);
 }
@@ -77,18 +71,13 @@ int main() {
     Map *m = StringMap_new(Counter, node, key);
     
     add_words(m, "andrew rules lol he is super cool!");
-    print_words(m);
-
     Counter *counter = Map_remove(m, "super");
-    printf("MAIN: removed 'super'; mapsize: %lu\n", m->nelements);
     free(counter);
-
-    print_words(m);
-
+    printf("main: removed 'super', size: %lu\n", Map_size(m));
     add_words(m, "andrew does not suck lol LOL haha he super rules");
 
     print_words(m);
-
+    
     free_all(m);
     return 0;
 }
