@@ -9,7 +9,6 @@
 #define ELEM(M, N) ((void *) ((size_t) N - M->node_offset))
 #define HASH(M, K) ((size_t) (M->hash(K, M->key_size)))
 
-static size_t chain_len(MapNode *bucket);
 static MapStatus add_node(Map *m, MapNode *node);
 static void *remove_elem(Map *m, void *key);
 static MapStatus maybe_rehash(Map *m);
@@ -133,16 +132,6 @@ void **Map_items(Map *m) {
         }
     }
     return elems;
-}
-
-
-static size_t chain_len(MapNode *bucket) {
-    size_t len = 0;
-    while (bucket) {
-        len++;
-        bucket = bucket->next;
-    }
-    return len;
 }
 
 
