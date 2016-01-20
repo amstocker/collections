@@ -50,5 +50,10 @@ int main() {
     c = Map_get(m, &key);
     printf("get (666, 747): %s\n", c->val);
 
+    // should fail
+    key.x = -1;
+    c = Map_get(m, &key);
+    printf("get (-1, 747): %p\n", c);
+
     return 0;
 }
