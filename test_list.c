@@ -55,12 +55,12 @@ main()
   List *l = construct_list();
  
   printf("forward iter...\n");
-  LIST_FOREACH(Test *elem, l) {
+  LIST_FOREACH (Test, elem, l) {
       printf("elem->a: %i\n", elem->a);
   }
   
   printf("reverse iter...\n");
-  LIST_FOREACH_REV(Test *elem, l) {
+  LIST_FOREACH_REV (Test, elem, l) {
       printf("elem->a: %i\n", elem->a);
   }
 

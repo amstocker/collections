@@ -28,13 +28,13 @@ typedef struct {
 #define list_pop_head(L) list_remove(l, l->root.next)
 #define list_pop_tail(L) list_remove(l, l->root.prev->prev->next)
 
-#define LIST_FOREACH(T, L) for(T = list_head(L); \
-                               elem != NULL; \
-                               elem = list_next(L, elem))
+#define LIST_FOREACH(T, V, L) for(T *V = list_head(L); \
+                                  V != NULL; \
+                                  V = list_next(L, V))
 
-#define LIST_FOREACH_REV(T, L) for (T = list_tail(L); \
-                                    elem != NULL; \
-                                    elem = list_prev(L, elem))
+#define LIST_FOREACH_REV(T, V, L) for (T *V = list_tail(L); \
+                                       V != NULL; \
+                                       V = list_prev(L, V))
 
 
 void list_node_init_with_offset (ListNode *n, size_t offset);
