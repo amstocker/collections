@@ -8,12 +8,12 @@
 #define ELEM(M, N) ((void *) ((size_t) N - M->node_offset))
 #define HASH(M, K) ((size_t) (M->hash(K, M->key_size)))
 
-static MapStatus add_node(Map *m, MapNode *node);
-static void *remove_elem(Map *m, void *key);
-static MapStatus maybe_rehash(Map *m);
+static MapStatus add_node (Map *m, MapNode *node);
+static void *remove_elem (Map *m, void *key);
+static MapStatus maybe_rehash (Map *m);
 
 
-int Map_default_comparator(void *lhs, void *rhs, size_t size)
+int Map_default_comparator (void *lhs, void *rhs, size_t size)
 {
     int r = 0;
     while (size--) {
@@ -24,19 +24,19 @@ int Map_default_comparator(void *lhs, void *rhs, size_t size)
 }
 
 
-int Map_strict_comparator(void *lhs, void *rhs, size_t _)
+int Map_strict_comparator (void *lhs, void *rhs, size_t _)
 {
     return (int) !(lhs == rhs);
 }
 
 
-int Map_string_comparator(void *lhs, void *rhs, size_t _)
+int Map_string_comparator (void *lhs, void *rhs, size_t _)
 {
     return strcmp((char*) lhs, (char*) rhs);
 }
 
 
-MapStatus MapNode_init(MapNode *n)
+MapStatus MapNode_init (MapNode *n)
 {
     n->key = NULL;
     n->hash = 0;
@@ -45,9 +45,9 @@ MapStatus MapNode_init(MapNode *n)
 }
 
 
-Map *Map_newWithOffsets(size_t node_offset,
-                        size_t key_offset,
-                        size_t key_size)
+Map *Map_newWithOffsets (size_t node_offset,
+                         size_t key_offset,
+                         size_t key_size)
 {
     Map *m = malloc(sizeof(Map));
     if (!m) {
@@ -65,7 +65,7 @@ Map *Map_newWithOffsets(size_t node_offset,
 }
 
 
-Map *StringMap_newWithOffsets(size_t node_offset, size_t key_offset)
+Map *StringMap_newWithOffsets (size_t node_offset, size_t key_offset)
 {
     Map *m = Map_newWithOffsets(node_offset, key_offset, 0);
     m->hash = Map_string_hash;
@@ -74,7 +74,7 @@ Map *StringMap_newWithOffsets(size_t node_offset, size_t key_offset)
 }
 
 
-MapStatus Map_free(Map *m)
+MapStatus Map_free (Map *m)
 {
     if (!m || !m->buckets) {
         return MAP_ERR;
@@ -85,7 +85,7 @@ MapStatus Map_free(Map *m)
 }
 
 
-MapStatus Map_add(Map *m, void *elem)
+MapStatus Map_add (Map *m, void *elem)
 {
     if (maybe_rehash(m) == MAP_ERR) return MAP_ERR;
     
@@ -97,7 +97,7 @@ MapStatus Map_add(Map *m, void *elem)
 }
 
 
-void *Map_get(Map *m, void *key)
+void *Map_get (Map *m, void *key)
 {
     MapNode *bucket = m->buckets[ HASH(m, key) % m->nbuckets ];
     while (bucket) {
@@ -110,13 +110,13 @@ void *Map_get(Map *m, void *key)
 }
 
 
-void *Map_remove(Map *m, void *key)
+void *Map_remove (Map *m, void *key)
 {
     return remove_elem(m, key);
 }
 
 
-void **Map_items(Map *m) {
+void **Map_items (Map *m) {
     void **elems = calloc(m->nelements, sizeof(void*));
     if (!elems) {
         return NULL;
@@ -134,7 +134,7 @@ void **Map_items(Map *m) {
 }
 
 
-static MapStatus add_node(Map *m, MapNode *node)
+static MapStatus add_node (Map *m, MapNode *node)
 {
     size_t index = node->hash % m->nbuckets;
     MapNode *bucket = m->buckets[index];
@@ -156,7 +156,7 @@ static MapStatus add_node(Map *m, MapNode *node)
 }
 
 
-static void *remove_elem(Map *m, void *key)
+static void *remove_elem (Map *m, void *key)
 {
     uint32_t index = HASH(m, key) % m->nbuckets;
     MapNode *bucket = m->buckets[index];
@@ -179,7 +179,7 @@ static void *remove_elem(Map *m, void *key)
 }
 
 
-static MapStatus maybe_rehash(Map *m)
+static MapStatus maybe_rehash (Map *m)
 {
     if ((float) m->nelements / m->nbuckets < MAP_HIGH_WATERMARK) {
         return MAP_OK;
