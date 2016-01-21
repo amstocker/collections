@@ -26,12 +26,14 @@ int Map_default_comparator (void *lhs, void *rhs, size_t size)
 
 int Map_strict_comparator (void *lhs, void *rhs, size_t _)
 {
+    (void) _;  // unused
     return (int) !(lhs == rhs);
 }
 
 
 int Map_string_comparator (void *lhs, void *rhs, size_t _)
 {
+    (void) _;  // unused
     return strcmp((char*) lhs, (char*) rhs);
 }
 
@@ -123,7 +125,7 @@ void **Map_items (Map *m) {
     }
     void **elem = elems;
     MapNode *n;
-    for (int i = 0; i < m->nbuckets; i++) {
+    for (size_t i = 0; i < m->nbuckets; i++) {
         n = m->buckets[i];
         while (n) {
             *elem++ = ELEM(m, n);
