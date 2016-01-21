@@ -4,19 +4,19 @@
 
 
 typedef enum {
-    LIST_OK,
-    LIST_ERR
+  LIST_OK,
+  LIST_ERR
 } ListStatus;
 
 typedef struct ListNode {
-    struct ListNode *prev;
-    void *next;
+  struct ListNode *prev;
+  void *next;
 } ListNode;
 
 typedef struct {
-    ListNode root;
-    size_t size;
-    size_t offset;
+  ListNode root;
+  size_t size;
+  size_t offset;
 } List;
 
 
