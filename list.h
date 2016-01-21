@@ -20,30 +20,30 @@ typedef struct {
 } List;
 
 
-#define ListNode_init(P, T, M) ListNode_initWithOffset(P, offsetof(T, M))
-#define List_new(T, M) List_newWithOffset(offsetof(T, M))
+#define list_node_init(P, T, M) list_node_init_with_offset (P, offsetof(T, M))
+#define list_new(T, M) list_new_with_offset (offsetof(T, M))
 
-#define List_head(L) List_next(L, L)
-#define List_tail(L) List_prev(L, L)
-#define List_popHead(L) List_remove(l, l->root.next)
-#define List_popTail(L) List_remove(l, l->root.prev->prev->next)
+#define list_head(L) list_next(L, L)
+#define list_tail(L) list_prev(L, L)
+#define list_pop_head(L) list_remove(l, l->root.next)
+#define list_pop_tail(L) list_remove(l, l->root.prev->prev->next)
 
-#define List_forEach(T, L) for(T = List_head(L); \
+#define LIST_FOREACH(T, L) for(T = list_head(L); \
                                elem != NULL; \
-                               elem = List_next(L, elem))
+                               elem = list_next(L, elem))
 
-#define List_forEachReverse(T, L) for (T = List_tail(L); \
-                                       elem != NULL; \
-                                       elem = List_prev(L, elem))
+#define LIST_FOREACH_REV(T, L) for (T = list_tail(L); \
+                                    elem != NULL; \
+                                    elem = list_prev(L, elem))
 
 
-void ListNode_initWithOffset (ListNode *n, size_t offset);
-ListStatus ListNode_unlink (List *l, ListNode *node);
-List *List_newWithOffset (size_t offset);
-void *List_next (List *l, void *elem);
-void *List_prev (List *l, void *elem);
-ListStatus List_append (List *l, void *elem);
-ListStatus List_prepend (List *l, void *elem);
-ListStatus List_appendAfter (List *l, void *target, void *elem);
-ListStatus List_appendBefore (List *l, void *target, void *elem);
-void *List_remove (List *l, void *elem);
+void list_node_init_with_offset (ListNode *n, size_t offset);
+ListStatus list_node_unlink (List *l, ListNode *node);
+List *list_new_with_offset (size_t offset);
+void *list_next (List *l, void *elem);
+void *list_prev (List *l, void *elem);
+ListStatus list_append (List *l, void *elem);
+ListStatus list_prepend (List *l, void *elem);
+ListStatus list_append_after (List *l, void *target, void *elem);
+ListStatus list_append_before (List *l, void *target, void *elem);
+void *list_remove (List *l, void *elem);
