@@ -15,9 +15,9 @@ void print_diag(Map *m) {
         while ((bucket = bucket->next)) tot_len++;
     }
     printf("DIAG:\n\tsize: %lu, buckets: %lu, filled: %f, avg_chain: %f\n",
-            Map_size(m),
+            map_size(m),
             m->nbuckets,
-            Map_filled(m),
+            map_filled(m),
             (float) tot_len / m->nbuckets);
 }
 
@@ -32,7 +32,7 @@ Counter *make_counter(char *key) {
     Counter *c = malloc(sizeof(Counter));
     c->count = 0;
     strcpy(c->key, key);
-    MapNode_init(&c->node);
+    map_node_init(&c->node);
     return c;
 }
 
@@ -52,10 +52,10 @@ void add_words(Map *m, char *string) {
         memset(buf, 0, sizeof(buf));
         c = read_until_space(buf, c);
         
-        counter = Map_get(m, buf);
+        counter = map_get(m, buf);
         if (!counter) {
             counter = make_counter(buf);
-            Map_add(m, counter);
+            map_add(m, counter);
         }
         counter->count++;
         print_diag(m);
@@ -64,7 +64,7 @@ void add_words(Map *m, char *string) {
 }
 
 void print_words(Map *m) {
-    void **elems = Map_items(m);
+    void **elems = map_items(m);
     Counter *counter;
     for (int i = 0; i < m->nelements; i++) {
         counter = elems[i];
@@ -74,24 +74,24 @@ void print_words(Map *m) {
 }
 
 void free_all(Map *m) {
-    void **elems = Map_items(m);
+    void **elems = map_items(m);
     Counter *counter;
     for (int i = 0; i < m->nelements; i++) {
         counter = elems[i];
         free(counter);
     }
     free(elems);
-    Map_free(m);
+    map_free(m);
 }
 
 
 int main() {
-    Map *m = StringMap_new(Counter, node, key);
+    Map *m = string_map_new(Counter, node, key);
     
     add_words(m, "andrew rules lol he is super cool!");
-    Counter *counter = Map_remove(m, "super");
+    Counter *counter = map_remove(m, "super");
     free(counter);
-    printf("main: removed 'super', size: %lu\n", Map_size(m));
+    printf("main: removed 'super', size: %lu\n", map_size(m));
     add_words(m, "andrew does not suck lol LOL haha he super rules");
 
     print_words(m);
