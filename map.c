@@ -162,9 +162,9 @@ add_node (Map *m, MapNode *node)
   size_t index = node->hash % m->nbuckets;
   MapNode *bucket = m->buckets[index];
   MapNode *prev;
-  if (!bucket) {
+  if (!bucket)
     m->buckets[index] = node;
-  } else {
+  else {
     while (bucket) {
       if (!m->cmp(node->key, bucket->key, m->key_size))
         return MAP_ERR;
