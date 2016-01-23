@@ -8,8 +8,8 @@ void print_diag(Map *m) {
     size_t tot_len = 0;
     MapNode *bucket;
     for (size_t i = 0; i < m->nbuckets; i++) {
-        bucket = m->buckets[i];
-        if (!bucket) {
+        bucket = m->buckets[i]->next;
+        if (!bucket || !bucket->key) {
             continue;
         }
         while ((bucket = bucket->next) && bucket->key) tot_len++;
