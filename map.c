@@ -96,11 +96,13 @@ map_free (Map *m)
 MapStatus
 map_add (Map *m, void *elem)
 {
-  if (maybe_rehash(m) == MAP_ERR)
-    return MAP_ERR;
   MapNode *node = NODE(m, elem);
   node->key = KEY(m, elem);
+  if (!node->key)
+    return MAP_ERR;
   node->hash = HASH(m, node->key);
+  if (maybe_rehash(m) == MAP_ERR)
+    return MAP_ERR;
   return add_node(m, node);
 }
 
