@@ -97,7 +97,7 @@ MapStatus
 map_free_all (Map *m, void (*_free) (void*))
 {
   void *last = NULL;
-  MAP_FOREACH(void, e, m) {
+  MAP_FOREACH (void, e, m) {
     if (last)
       _free(last);
     last = e;
