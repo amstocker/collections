@@ -12,7 +12,7 @@ void print_diag(Map *m) {
         if (!bucket) {
             continue;
         }
-        while ((bucket = bucket->next)) tot_len++;
+        while ((bucket = bucket->next) && bucket->key) tot_len++;
     }
     printf("DIAG:\n\tsize: %lu, buckets: %lu, filled: %f, avg_chain: %f\n",
             map_size(m),
@@ -51,7 +51,7 @@ void add_words(Map *m, char *string) {
     while (*c) {
         memset(buf, 0, sizeof(buf));
         c = read_until_space(buf, c);
-        
+       
         counter = map_get(m, buf);
         if (!counter) {
             counter = make_counter(buf);
@@ -64,13 +64,9 @@ void add_words(Map *m, char *string) {
 }
 
 void print_words(Map *m) {
-    void **elems = map_items(m);
-    Counter *counter;
-    for (int i = 0; i < m->nelements; i++) {
-        counter = elems[i];
-        printf("print_words: %s: %i\n", counter->key, counter->count);
+    MAP_FOREACH(Counter, c, m) {
+        printf("print_words: %s: %i\n", c->key, c->count);
     }
-    free(elems);
 }
 
 void free_all(Map *m) {

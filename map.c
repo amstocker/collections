@@ -8,6 +8,8 @@
 #define ELEM(M, N) ((void *) ((size_t) N - M->node_offset))
 #define HASH(M, K) ((size_t) (M->hash(K, M->key_size)))
 
+static void init_anchors (MapNode **buckets, size_t size);
+static void free_anchors (MapNode **buckets, size_t size);
 static MapStatus add_node (Map *m, MapNode *node);
 static MapStatus maybe_rehash (Map *m);
 
@@ -64,6 +66,7 @@ map_new_with_offsets (size_t node_offset, size_t key_offset, size_t key_size)
   m->key_size = key_size;
   m->nbuckets = MAP_INIT_SIZE;
   m->nelements = 0;
+  init_anchors(m->buckets, m->nbuckets);
   return m;
 }
 
@@ -83,6 +86,7 @@ map_free (Map *m)
 {
   if (!m || !m->buckets)
     return MAP_ERR;
+  free_anchors(m->buckets, m->nbuckets);
   free(m->buckets);
   free(m);
   return MAP_OK;
@@ -104,8 +108,8 @@ map_add (Map *m, void *elem)
 void*
 map_get (Map *m, void *key)
 {
-  MapNode *bucket = m->buckets[ HASH(m, key) % m->nbuckets ];
-  while (bucket) {
+  MapNode *bucket = m->buckets[ HASH(m, key) % m->nbuckets ]->next;
+  while (bucket && bucket->key) {
     if (m->cmp(key, bucket->key, m->key_size) == 0)
       return ELEM(m, bucket);
     bucket = bucket->next;
@@ -118,15 +122,12 @@ void*
 map_remove (Map *m, void *key)
 {
   uint32_t index = HASH(m, key) % m->nbuckets;
-  MapNode *bucket = m->buckets[index];
-  MapNode *prev = NULL;
-  while (bucket) {
+  MapNode *prev = m->buckets[index];
+  MapNode *bucket = prev->next;
+  while (bucket && bucket->key) {
     if (m->cmp(key, bucket->key, m->key_size) == 0) {
-      if (!prev)
-        m->buckets[index] = bucket->next;
-      else
-        prev->next = bucket->next;
-      bucket->next = NULL;       
+      prev->next = bucket->next;
+      bucket->next = NULL;
       m->nelements--;
       return ELEM(m, bucket);
     }
@@ -146,8 +147,8 @@ map_items (Map *m)
   void **elem = elems;
   MapNode *n;
   for (size_t i = 0; i < m->nbuckets; i++) {
-    n = m->buckets[i];
-    while (n) {
+    n = m->buckets[i]->next;
+    while (n && n->key) {
       *elem++ = ELEM(m, n);
       n = n->next;
     }
@@ -156,23 +157,56 @@ map_items (Map *m)
 }
 
 
+void*
+map_head (Map *m)
+{
+  return map_next(m, ELEM(m, m->buckets[0]));
+}
+
+
+void*
+map_next (Map *m, void *elem)
+{
+  MapNode *node = NODE(m, elem);
+  do
+    node = node->next;
+  while
+    (node && !node->key);
+  return node ? ELEM(m, node) : NULL;
+}
+
+
+static void init_anchors (MapNode **buckets, size_t size) {
+  MapNode *next = NULL;
+  while (size--) {
+    buckets[size] = malloc(sizeof(MapNode));
+    map_node_init(buckets[size]);
+    buckets[size]->next = next;
+    next = buckets[size];
+  }
+}
+
+
+static void free_anchors (MapNode **buckets, size_t size) {
+  while (size--)
+    free(buckets[size]);
+}
+
+
 static MapStatus
 add_node (Map *m, MapNode *node)
 {
   size_t index = node->hash % m->nbuckets;
-  MapNode *bucket = m->buckets[index];
-  MapNode *prev;
-  if (!bucket)
-    m->buckets[index] = node;
-  else {
-    while (bucket) {
-      if (!m->cmp(node->key, bucket->key, m->key_size))
-        return MAP_ERR;
-      prev = bucket;
-      bucket = bucket->next;
-    }
-    prev->next = node;
+  MapNode *prev = m->buckets[index];
+  MapNode *bucket = prev->next;
+  while (bucket && bucket->key) {
+    if (!m->cmp(node->key, bucket->key, m->key_size))
+      return MAP_ERR;
+    prev = bucket;
+    bucket = bucket->next;
   }
+  node->next = prev->next;
+  prev->next = node;
   m->nelements++;
   return MAP_OK;
 }
@@ -181,13 +215,16 @@ add_node (Map *m, MapNode *node)
 static MapStatus
 maybe_rehash (Map *m)
 {
-  if ((float) m->nelements / m->nbuckets < MAP_HIGH_WATERMARK)
+  if ((float) m->nelements / m->nbuckets < MAP_HIGH_WATERMARK) {
     return MAP_OK;
+  }
   size_t old_size = m->nbuckets;
   size_t new_size = SIZEUP(old_size);
   MapNode **new_buckets = calloc(new_size, sizeof(MapNode*));
   if (!new_buckets)
     return MAP_ERR;
+  else
+    init_anchors(new_buckets, new_size);
   MapNode **old_buckets = m->buckets;
   m->buckets = new_buckets;
   m->nbuckets = new_size;
@@ -195,14 +232,14 @@ maybe_rehash (Map *m)
 
   MapNode *node, *next;
   for (size_t i = 0; i < old_size; i++) {
-    node = old_buckets[i];
-    while (node) {
-      add_node(m, node);
+    node = old_buckets[i]->next;
+    while (node && node->key) {
       next = node->next;
-      node->next = NULL;
+      add_node(m, node);
       node = next;
     }
   }
+  free_anchors(old_buckets, old_size);
   free(old_buckets);
   return MAP_OK;
 }

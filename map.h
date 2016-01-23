@@ -28,6 +28,11 @@ typedef struct MapNode {
 } MapNode;
 
 typedef struct {
+  size_t cur;
+  void *elem;
+} MapIter;
+
+typedef struct {
   Map_HashFunc hash;
   Map_Comparator cmp;
   MapNode **buckets;
@@ -54,6 +59,10 @@ typedef struct {
 #define map_capacity(M) ((size_t) (M->nbuckets * MAP_HIGH_WATERMARK))
 #define map_filled(M) ((float) M->nelements / M->nbuckets)
 
+#define MAP_FOREACH(T, V, M) for (T *V = map_head(M); \
+                                  V != NULL; \
+                                  V = map_next(M, V))
+
 
 MapStatus map_node_init (MapNode *n);
 Map *map_new_with_offsets (size_t node_offset, size_t key_offset, size_t key_size);
@@ -63,3 +72,5 @@ MapStatus map_add (Map *m, void *elem);
 void *map_get (Map *m, void *key);
 void *map_remove (Map *m, void *key);
 void **map_items (Map *m);
+void *map_head (Map *m);
+void *map_next (Map *m, void *elem);
