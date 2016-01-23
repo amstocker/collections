@@ -28,11 +28,6 @@ typedef struct MapNode {
 } MapNode;
 
 typedef struct {
-  size_t cur;
-  void *elem;
-} MapIter;
-
-typedef struct {
   Map_HashFunc hash;
   Map_Comparator cmp;
   MapNode **buckets;
