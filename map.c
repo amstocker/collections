@@ -127,7 +127,7 @@ map_remove (Map *m, void *key)
   while (bucket && bucket->key) {
     if (m->cmp(key, bucket->key, m->key_size) == 0) {
       prev->next = bucket->next;
-      bucket->next = NULL;
+      map_node_init(bucket);
       m->nelements--;
       return ELEM(m, bucket);
     }
@@ -176,7 +176,9 @@ map_next (Map *m, void *elem)
 }
 
 
-static void init_anchors (MapNode **buckets, size_t size) {
+static void
+init_anchors (MapNode **buckets, size_t size)
+{
   MapNode *next = NULL;
   while (size--) {
     buckets[size] = malloc(sizeof(MapNode));
@@ -187,7 +189,9 @@ static void init_anchors (MapNode **buckets, size_t size) {
 }
 
 
-static void free_anchors (MapNode **buckets, size_t size) {
+static void
+free_anchors (MapNode **buckets, size_t size)
+{
   while (size--)
     free(buckets[size]);
 }
