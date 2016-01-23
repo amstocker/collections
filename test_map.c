@@ -1,91 +1,82 @@
+// Word Count impl for testing hash map
 #include <stdio.h>
+#include <ctype.h>
 #include "map.h"
 
+#define BUF_SIZE 256
 
-#define BUF_SIZE 64
 
-void print_diag(Map *m) {
-    size_t tot_len = 0;
-    MapNode *bucket;
-    for (size_t i = 0; i < m->nbuckets; i++) {
-        bucket = m->buckets[i]->next;
-        if (!bucket || !bucket->key) {
-            continue;
-        }
-        while ((bucket = bucket->next) && bucket->key) tot_len++;
-    }
-    printf("DIAG:\n\tsize: %lu, buckets: %lu, filled: %f, avg_chain: %f\n",
-            map_size(m),
-            m->nbuckets,
-            map_filled(m),
-            (float) tot_len / m->nbuckets);
-}
-
+Map *m;
+char buf[BUF_SIZE];
 
 typedef struct {
-    int count;
-    char key[BUF_SIZE];
-    MapNode node;
+  int count;
+  char word[BUF_SIZE];
+  MapNode node;
 } Counter;
 
-Counter *make_counter(char *key) {
-    Counter *c = malloc(sizeof(Counter));
-    c->count = 0;
-    strcpy(c->key, key);
-    map_node_init(&c->node);
-    return c;
+
+Counter *make_counter (char *word)
+{
+  Counter *c = malloc(sizeof(Counter));
+  c->count = 0;
+  strcpy(c->word, word);
+  map_node_init(&c->node);
+  return c;
 }
 
 
-char *read_until_space(char *buf, char *str) {
-    while (*str && *str != ' ') {
-        *buf++ = *str++;
-    }
-    return str;
-}
+int next_word (FILE *fp)
+{
+  memset(buf, 0, sizeof(buf));
+  char *p = buf;
+  char c;
 
-void add_words(Map *m, char *string) {
-    char buf[BUF_SIZE];
-    char *c = string;
-    Counter *counter;
-    while (*c) {
-        memset(buf, 0, sizeof(buf));
-        c = read_until_space(buf, c);
-       
-        counter = map_get(m, buf);
-        if (!counter) {
-            counter = make_counter(buf);
-            map_add(m, counter);
-        }
-        counter->count++;
-        print_diag(m);
-        if (*c) c++;
-    }
-}
+  while ((c = fgetc(fp)) != EOF && !isalnum(c));
+  if (c == EOF)
+    return 0;
 
-void print_words(Map *m) {
-    MAP_FOREACH (Counter, c, m)
-      printf("print_words: %s: %i\n", c->key, c->count);
-}
+  *p++ = c;
+  while ((c = fgetc(fp)) != EOF &&
+         isalnum(c) &&
+         (size_t) (p - buf) < BUF_SIZE)
+    *p++ = c;
 
-void free_all(Map *m) {
-    MAP_FOREACH (Counter, c, m)
-      free(c);
-    map_free(m);
+  return c == EOF ? 0 : 1;
 }
 
 
 int main() {
-    Map *m = string_map_new(Counter, node, key);
-    
-    add_words(m, "andrew rules lol he is super cool!");
-    Counter *counter = map_remove(m, "super");
-    free(counter);
-    printf("main: removed 'super', size: %lu\n", map_size(m));
-    add_words(m, "andrew does not suck lol LOL haha he super rules");
+  m = string_map_new(Counter, node, word);
 
-    print_words(m);
-    
-    free_all(m);
-    return 0;
+  while (next_word(stdin)) {
+    Counter *c = map_get(m, buf);
+    if (!c) {
+      c = make_counter(buf);
+      map_add(m, c);
+    }
+    c->count++;
+  }
+  
+  // print word counts
+  puts("Contents:");
+  MAP_FOREACH (Counter, c, m)
+    printf("\t%s: %i\n", c->word, c->count);
+
+  // print statistics
+  puts("Map Statistics:");
+  printf("\tsize: %lu\n", map_size(m));
+  printf("\tbuckets: %lu\n", m->nbuckets);
+
+  // free everything
+  Counter *last = NULL;
+  MAP_FOREACH (Counter, c, m) {
+    if (last)
+      free(last);
+    last = c;
+  }
+  free(last);
+  map_free(m);
+  
+  return 0;
 }
