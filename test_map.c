@@ -3,7 +3,7 @@
 #include <ctype.h>
 #include "map.h"
 
-#define BUF_SIZE 256
+#define BUF_SIZE 64
 
 
 Map *m;
