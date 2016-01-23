@@ -42,7 +42,7 @@ int next_word (FILE *fp)
          (size_t) (p - buf) < BUF_SIZE)
     *p++ = c;
 
-  return c == EOF ? 0 : 1;
+  return 1;
 }
 
 
