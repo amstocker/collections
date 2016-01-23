@@ -59,14 +59,8 @@ int main() {
   }
   
   // print word counts
-  puts("Contents:");
   MAP_FOREACH (Counter, c, m)
-    printf("\t%s: %i\n", c->word, c->count);
-
-  // print statistics
-  puts("Map Statistics:");
-  printf("\tsize: %lu\n", map_size(m));
-  printf("\tbuckets: %lu\n", m->nbuckets);
+    printf("%s: %i\n", c->word, c->count);
 
   // free everything
   Counter *last = NULL;
