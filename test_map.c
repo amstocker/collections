@@ -64,19 +64,13 @@ void add_words(Map *m, char *string) {
 }
 
 void print_words(Map *m) {
-    MAP_FOREACH(Counter, c, m) {
-        printf("print_words: %s: %i\n", c->key, c->count);
-    }
+    MAP_FOREACH (Counter, c, m)
+      printf("print_words: %s: %i\n", c->key, c->count);
 }
 
 void free_all(Map *m) {
-    void **elems = map_items(m);
-    Counter *counter;
-    for (int i = 0; i < m->nelements; i++) {
-        counter = elems[i];
-        free(counter);
-    }
-    free(elems);
+    MAP_FOREACH (Counter, c, m)
+      free(c);
     map_free(m);
 }
 
