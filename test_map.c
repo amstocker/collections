@@ -62,15 +62,6 @@ int main() {
   MAP_FOREACH (Counter, c, m)
     printf("%s: %i\n", c->word, c->count);
 
-  // free everything
-  Counter *last = NULL;
-  MAP_FOREACH (Counter, c, m) {
-    if (last)
-      free(last);
-    last = c;
-  }
-  free(last);
-  map_free(m);
-  
+  map_free_all(m, free);
   return 0;
 }

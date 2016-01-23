@@ -94,6 +94,20 @@ map_free (Map *m)
 
 
 MapStatus
+map_free_all (Map *m, void (*_free) (void*))
+{
+  void *last = NULL;
+  MAP_FOREACH(void, e, m) {
+    if (last)
+      _free(last);
+    last = e;
+  }
+  _free(last);
+  return map_free(m);
+}
+
+
+MapStatus
 map_add (Map *m, void *elem)
 {
   MapNode *node = NODE(m, elem);

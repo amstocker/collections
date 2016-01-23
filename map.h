@@ -63,6 +63,7 @@ MapStatus map_node_init (MapNode *n);
 Map *map_new_with_offsets (size_t node_offset, size_t key_offset, size_t key_size);
 Map *string_map_new_with_offsets (size_t node_offset, size_t key_offset);
 MapStatus map_free (Map *m);
+MapStatus map_free_all (Map *m, void (*_free) (void*));
 MapStatus map_add (Map *m, void *elem);
 void *map_get (Map *m, void *key);
 void *map_remove (Map *m, void *key);
