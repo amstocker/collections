@@ -6,24 +6,13 @@
 #define BUF_SIZE 64
 
 
-Map *m;
-char buf[BUF_SIZE];
-
 typedef struct {
   int count;
   char word[BUF_SIZE];
   MapNode node;
 } Counter;
 
-
-Counter *make_counter (char *word)
-{
-  Counter *c = malloc(sizeof(Counter));
-  c->count = 0;
-  strcpy(c->word, word);
-  map_node_init(&c->node);
-  return c;
-}
+char buf[BUF_SIZE];
 
 
 int next_word (FILE *fp)
@@ -31,28 +20,27 @@ int next_word (FILE *fp)
   memset(buf, 0, sizeof(buf));
   char *p = buf;
   char c;
-
   while ((c = fgetc(fp)) != EOF && !isalnum(c));
   if (c == EOF)
     return 0;
-
   *p++ = c;
-  while ((c = fgetc(fp)) != EOF &&
-         isalnum(c) &&
-         (size_t) (p - buf) < BUF_SIZE)
+  while ((size_t) (p - buf) < BUF_SIZE &&
+         (c = fgetc(fp)) != EOF &&
+         isalnum(c))
     *p++ = c;
-
   return 1;
 }
 
 
 int main() {
-  m = string_map_new(Counter, node, word);
+  Map *m = string_map_new(Counter, node, word);
 
   while (next_word(stdin)) {
     Counter *c = map_get(m, buf);
     if (!c) {
-      c = make_counter(buf);
+      c = malloc(sizeof(Counter));
+      strcpy(c->word, buf);
+      c->count = 0;
       map_add(m, c);
     }
     c->count++;
