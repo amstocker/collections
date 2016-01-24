@@ -20,14 +20,15 @@ int next_word (FILE *fp)
   memset(buf, 0, sizeof(buf));
   char *p = buf;
   char c;
-  while ((c = fgetc(fp)) != EOF && !isalnum(c));
+  while
+    ((c = fgetc(fp)) != EOF && !isalnum(c));
   if (c == EOF)
     return 0;
-  *p++ = c;
+  do
+    *p++ = c;
   while ((size_t) (p - buf) < BUF_SIZE &&
          (c = fgetc(fp)) != EOF &&
-         isalnum(c))
-    *p++ = c;
+         isalnum(c));
   return 1;
 }
 
