@@ -6,9 +6,9 @@
   comparator_##T (void *lhs, void *rhs, size_t _) \
   { \
     (void) _; \
-    return *(T*) lhs < *(T*) rhs \
-           ? -1 \
-           : *(T*) lhs > *(T*) rhs ? 1 : 0; \
+    return   *(T*) lhs < *(T*) rhs ? -1 \
+           : *(T*) lhs > *(T*) rhs ?  1 \
+           : 0; \
   }
 
 NUMERIC_COMPARATOR(int);
