@@ -1,6 +1,15 @@
 #include "comparator.h"
 
-  
+
+#define NUMERIC_COMPARATOR(T) \
+  int \
+  comparator_##T (void *lhs, void *rhs, size_t _) \
+  { \
+    (void) _; \
+    return (int) (*(T*) lhs - *(T*) rhs); \
+  }
+
+
 int
 comparator_bytes (void *lhs, void *rhs, size_t size)
 {
@@ -27,3 +36,8 @@ comparator_string (void *lhs, void *rhs, size_t _)
   (void) _;  // unused
   return strcmp((char*) lhs, (char*) rhs);
 }
+
+
+NUMERIC_COMPARATOR(int)
+NUMERIC_COMPARATOR(float)
+NUMERIC_COMPARATOR(double)

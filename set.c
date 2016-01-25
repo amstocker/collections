@@ -85,9 +85,11 @@ set_next (Set *s, void *elem)
       node = node->left;
     return ELEM(s, node);
   }
+  if (!node->parent)
+    return NULL;
   if (node != node->parent->left) {
     node = node->parent;
-    while (node->parent && node != node->parent->left)
+    while (node->parent && node == node->parent->right)
       node = node->parent;
     if (!node->parent)
       return NULL;
