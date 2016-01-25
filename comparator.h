@@ -11,5 +11,5 @@ int comparator_int (void*, void*, size_t);
 int comparator_float (void*, void*, size_t);
 int comparator_double (void*, void*, size_t);
 int comparator_bytes (void*, void*, size_t);
-int comparator_strict (void*, void*, size_t);
+int comparator_pointer (void*, void*, size_t);
 int comparator_string (void*, void*, size_t);

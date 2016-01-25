@@ -6,7 +6,9 @@
   comparator_##T (void *lhs, void *rhs, size_t _) \
   { \
     (void) _; \
-    return (int) (*(T*) lhs - *(T*) rhs); \
+    return *(T*) lhs < *(T*) rhs \
+           ? -1 \
+           : *(T*) lhs > *(T*) rhs ? 1 : 0; \
   }
 
 
@@ -23,7 +25,7 @@ comparator_bytes (void *lhs, void *rhs, size_t size)
 
 
 int
-comparator_strict (void *lhs, void *rhs, size_t _)
+comparator_pointer (void *lhs, void *rhs, size_t _)
 {
   (void) _;  // unused
   return lhs < rhs ? -1 : lhs > rhs ? 1 : 0;
