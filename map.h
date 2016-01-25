@@ -2,18 +2,15 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 #include "hash.h"
+#include "comparator.h"
 
 
-typedef uint32_t (*Map_HashFunc) (void *key, size_t size);
 #define map_default_hash hash_fnv
 #define map_string_hash hash_djb2
 
-typedef int (*Map_Comparator) (void *lhs, void *rhs, size_t size);
-int map_default_comparator (void*, void*, size_t);
-int map_strict_comparator (void*, void*, size_t);
-int map_string_comparator (void*, void*, size_t);
+#define map_default_comparator comparator_bytes
+#define map_string_comparator comparator_string
 
 
 typedef enum {
@@ -28,8 +25,8 @@ typedef struct MapNode {
 } MapNode;
 
 typedef struct {
-  Map_HashFunc hash;
-  Map_Comparator cmp;
+  HashFunc hash;
+  Comparator cmp;
   MapNode **buckets;
   size_t node_offset;
   size_t key_offset;

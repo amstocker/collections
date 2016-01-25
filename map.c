@@ -14,34 +14,6 @@ static MapStatus add_node (Map *m, MapNode *node);
 static MapStatus maybe_rehash (Map *m);
 
 
-int
-map_default_comparator (void *lhs, void *rhs, size_t size)
-{
-  int r = 0;
-  while (size--) {
-    r += *(uint8_t*) lhs - *(uint8_t*) rhs;
-    lhs++; rhs++;
-  }
-  return r;
-}
-
-
-int
-map_strict_comparator (void *lhs, void *rhs, size_t _)
-{
-  (void) _;  // unused
-  return (int) !(lhs == rhs);
-}
-
-
-int
-map_string_comparator (void *lhs, void *rhs, size_t _)
-{
-  (void) _;  // unused
-  return strcmp((char*) lhs, (char*) rhs);
-}
-
-
 MapStatus
 map_node_init (MapNode *n)
 {
