@@ -56,6 +56,7 @@ typedef struct {
 void set_node_init (SetNode *n);
 Set *set_new_with_offsets (size_t node_offset, size_t key_offset, size_t key_size);
 Set *string_set_new_with_offsets (size_t node_offset, size_t key_offset);
+SetStatus set_free (Set *s);
 SetStatus set_insert (Set *s, void *elem);
 void *set_head (Set *s);
 void *set_tail (Set *s);

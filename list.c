@@ -9,17 +9,7 @@
                              ? L \
                              : (void*) ((size_t) N - L->offset))
 
-
-static inline void
-insert_between (List *l, ListNode *a, ListNode *b, void *elem)
-{
-  ListNode *n = NODE_FROM_ELEM(l, elem);
-  n->next = b->prev->next;
-  n->prev = a;
-  a->next = elem;
-  b->prev = n;
-  l->size++;
-}
+static inline void insert_between (List*, ListNode*, ListNode*, void*);
 
 
 void
@@ -28,6 +18,7 @@ list_node_init_with_offset (ListNode *n, size_t offset)
   n->prev = n;
   n->next = (void*) ((size_t) n - offset);
 }
+
 
 ListStatus
 list_node_unlink (List *l, ListNode *node)
@@ -41,6 +32,7 @@ list_node_unlink (List *l, ListNode *node)
   return LIST_OK;
 }
 
+
 List*
 list_new_with_offset (size_t offset)
 {
@@ -51,6 +43,16 @@ list_new_with_offset (size_t offset)
   l->offset = offset;
   list_node_init_with_offset (&l->root, offsetof(List, root));
   return l;
+}
+
+
+ListStatus
+list_free (List *l)
+{
+  if (!l)
+    return LIST_ERR;
+  free(l);
+  return LIST_OK;
 }
 
 
@@ -115,3 +117,18 @@ list_remove (List *l, void *elem)
     return NULL;
   return elem;
 }
+
+
+static inline void
+insert_between (List *l, ListNode *a, ListNode *b, void *elem)
+{
+  ListNode *n = NODE_FROM_ELEM(l, elem);
+  n->next = b->prev->next;
+  n->prev = a;
+  a->next = elem;
+  b->prev = n;
+  l->size++;
+}
+
+
+

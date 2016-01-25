@@ -70,5 +70,6 @@ int main(int argc, char *argv[])
     printf("%s: %i\n", c->word, c->count);
 
   map_free_all(m, free);
+  set_free(s);
   return 0;
 }

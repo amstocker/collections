@@ -8,7 +8,6 @@
 #define IS_LEFT_CHILD(N) ((N)->parent && (N) == (N)->parent->left)
 #define IS_RIGHT_CHILD(N) ((N)->parent && (N) == (N)->parent->right)
 
-
 static void insert (Set *s, SetNode *root, SetNode *node);
 
 
@@ -44,6 +43,16 @@ string_set_new_with_offsets (size_t node_offset, size_t key_offset)
   Set *s = set_new_with_offsets(node_offset, key_offset, 0);
   s->cmp = set_string_comparator;
   return s;
+}
+
+
+SetStatus
+set_free (Set *s)
+{
+  if (!s)
+    return SET_ERR;
+  free(s);
+  return SET_OK;
 }
 
 
@@ -133,7 +142,8 @@ set_prev (Set *s, void *elem)
 }
 
 
-static void insert (Set *s, SetNode *root, SetNode *node)
+static void
+insert (Set *s, SetNode *root, SetNode *node)
 {
   if (s->cmp(node->key, root->key, s->key_size) < 0) {
     if (!root->left) {

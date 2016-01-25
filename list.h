@@ -40,6 +40,7 @@ typedef struct {
 void list_node_init_with_offset (ListNode *n, size_t offset);
 ListStatus list_node_unlink (List *l, ListNode *node);
 List *list_new_with_offset (size_t offset);
+ListStatus list_free (List *l);
 void *list_next (List *l, void *elem);
 void *list_prev (List *l, void *elem);
 ListStatus list_append (List *l, void *elem);
