@@ -78,6 +78,18 @@ set_head (Set *s)
 
 
 void*
+set_tail (Set *s)
+{
+  SetNode *node = s->root;
+  if (!node)
+    return NULL;
+  while (node->right)
+    node = node->right;
+  return ELEM(s, node);
+}
+
+
+void*
 set_next (Set *s, void *elem)
 {
   SetNode *node = NODE(s, elem);
@@ -90,8 +102,29 @@ set_next (Set *s, void *elem)
   if (!node->parent)
     return NULL;
   if IS_RIGHT_CHILD (node) {
-    node = node->parent;
     while IS_RIGHT_CHILD (node)
+      node = node->parent;
+    if (!node->parent)
+      return NULL;
+  }
+  return ELEM(s, node->parent);
+}
+
+
+void*
+set_prev (Set *s, void *elem)
+{
+  SetNode *node = NODE(s, elem);
+  if (node->left) {
+    node = node->left;
+    while (node->right)
+      node = node->right;
+    return ELEM(s, node);
+  }
+  if (!node->parent)
+    return NULL;
+  if IS_LEFT_CHILD (node) {
+    while IS_LEFT_CHILD (node)
       node = node->parent;
     if (!node->parent)
       return NULL;

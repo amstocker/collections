@@ -64,7 +64,7 @@ int main() {
   set_insert(s, p);
   print_set(s);
   
-  SET_FOREACH(Person, p, s)
+  SET_FOREACH (Person, p, s)
     printf("Person: %s (%i)\n", p->name, p->age);
 
   return 0;

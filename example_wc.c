@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
       set_insert(s, c);
 
   // print sorted word counts
-  SET_FOREACH (Counter, c, s)
+  SET_FOREACH_DESC (Counter, c, s)
     printf("%s: %i\n", c->word, c->count);
 
   map_free_all(m, free);

@@ -49,9 +49,15 @@ typedef struct {
                                   V != NULL; \
                                   V = set_next(S, V))
 
+#define SET_FOREACH_DESC(T, V, S) for (T *V = set_tail(S); \
+                                       V != NULL; \
+                                       V = set_prev(S, V))
+
 void set_node_init (SetNode *n);
 Set *set_new_with_offsets (size_t node_offset, size_t key_offset, size_t key_size);
 Set *string_set_new_with_offsets (size_t node_offset, size_t key_offset);
 SetStatus set_insert (Set *s, void *elem);
-void *set_head(Set *s);
-void *set_next(Set *s, void *elem);
+void *set_head (Set *s);
+void *set_tail (Set *s);
+void *set_next (Set *s, void *elem);
+void *set_prev (Set *s, void *elem);
