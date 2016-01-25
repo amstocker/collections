@@ -57,11 +57,10 @@ int main(int argc, char *argv[])
   fclose(fp);
 
   // add words to set
-  int cutoff;
+  int cutoff = 0;
   if (argc > 2)
     sscanf(argv[2], "%i", &cutoff);
-  else
-    cutoff = 0;
+  
   MAP_FOREACH (Counter, c, m)
     if (c->count >= cutoff)
       set_insert(s, c);
