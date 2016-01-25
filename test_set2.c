@@ -18,6 +18,7 @@ void insert (Set *s, int n) {
 
 int main() {
   Set *s = set_new(Val, node, n);
+  s->cmp = comparator_int;
 
   insert(s, 11);
   insert(s, 14);
