@@ -11,6 +11,10 @@
            : *(T*) lhs > *(T*) rhs ? 1 : 0; \
   }
 
+NUMERIC_COMPARATOR(int);
+NUMERIC_COMPARATOR(float);
+NUMERIC_COMPARATOR(double);
+
 
 int
 comparator_bytes (void *lhs, void *rhs, size_t size)
@@ -38,8 +42,3 @@ comparator_string (void *lhs, void *rhs, size_t _)
   (void) _;  // unused
   return strcmp((char*) lhs, (char*) rhs);
 }
-
-
-NUMERIC_COMPARATOR(int)
-NUMERIC_COMPARATOR(float)
-NUMERIC_COMPARATOR(double)
