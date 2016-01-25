@@ -5,7 +5,9 @@
 #define NODE(S, E) ((SetNode*) ((size_t) E + S->node_offset))
 #define ELEM(S, N) ((void *) ((size_t) N - S->node_offset))
 
-#define ATTACH(P, N, dir) { P->dir = N; N->parent = P; }
+#define IS_LEFT_CHILD(N) ((N)->parent && (N) == (N)->parent->left)
+#define IS_RIGHT_CHILD(N) ((N)->parent && (N) == (N)->parent->right)
+
 
 static void insert (Set *s, SetNode *root, SetNode *node);
 
@@ -87,9 +89,9 @@ set_next (Set *s, void *elem)
   }
   if (!node->parent)
     return NULL;
-  if (node != node->parent->left) {
+  if IS_RIGHT_CHILD (node) {
     node = node->parent;
-    while (node->parent && node == node->parent->right)
+    while IS_RIGHT_CHILD (node)
       node = node->parent;
     if (!node->parent)
       return NULL;
@@ -101,14 +103,18 @@ set_next (Set *s, void *elem)
 static void insert (Set *s, SetNode *root, SetNode *node)
 {
   if (s->cmp(node->key, root->key, s->key_size) < 0) {
-    if (!root->left)
-      ATTACH(root, node, left)
-    else
+    if (!root->left) {
+      root->left = node;
+      node->parent = root;
+    } else {
       return insert(s, root->left, node);
+    }
   } else {
-    if (!root->right)
-      ATTACH(root, node, right)
-    else
+    if (!root->right) {
+      root->right = node;
+      node->parent = root;
+    } else {
       return insert(s, root->right, node);
+    }
   }
 }
