@@ -1,7 +1,8 @@
 #include "hash.h"
 
 
-uint32_t hash_fnv (void *elem, size_t size)
+uint32_t
+hash_fnv (void *elem, size_t size)
 {
     uint32_t r = 2166136261;
     uint8_t *p = elem;
@@ -13,7 +14,8 @@ uint32_t hash_fnv (void *elem, size_t size)
 }
 
 
-uint32_t hash_djb2 (void *elem, size_t _)
+uint32_t
+hash_djb2 (void *elem, size_t _)
 {
     (void) _;  // unused
     uint32_t r = 5381;

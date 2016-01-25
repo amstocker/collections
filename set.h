@@ -2,78 +2,56 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "comparator.h"
+
+
+#define set_default_comparator comparator_bytes
+#define set_string_comparator comparator_string
 
 
 typedef enum {
-    SET_RED,
-    SET_BLACK
-} SetNode_Color;
+  SET_RED,
+  SET_BLACK
+} SetNodeColor;
 
 typedef struct SetNode {
-    SetNode_Color color;
-    struct SetNode *parent,
-                   *left,
-                   *right;
+  void *key;
+  SetNodeColor color;
+  struct SetNode *parent,
+                 *left,
+                 *right;
 } SetNode;
 
 typedef enum {
-    SET_OK,
-    SET_ERR
+  SET_OK,
+  SET_ERR
 } SetStatus;
 
-typedef enum {
-    SetNode root;
+typedef struct {
+  Comparator cmp;
+  SetNode *root;
+  size_t size;
+  size_t node_offset;
+  size_t key_offset;
+  size_t key_size;
 } Set;
 
 
-static const SetNode SENTINEL = { SET_BLACK, NULL, NULL, NULL };
+#define set_new(T, NODE, KEY) set_new_with_offsets(offsetof(T, NODE), \
+                                                 offsetof(T, KEY), \
+                                                 sizeof(((T*)0)->KEY))
 
-static inline SetNode *gparent(SetNode *n)
-{
-  if (n && n->parent)
-    return n->parent->parent;
-  else
-    return NULL;
-}
+#define string_set_new(T, NODE, KEY) string_set_new_with_offsets( \
+                                                 offsetof(T, NODE), \
+                                                 offsetof(T, KEY))
 
-static inline SetNode *uncle(SetNode *n)
-{
-  SetNode *g = gparent(n);
-  if (!g)
-    return NULL;
-  if (n->parent == g->left)
-    return g->right;
-  else
-    return g->left;
-}
+#define SET_FOREACH(T, V, S) for (T *V = set_head(S); \
+                                  V != NULL; \
+                                  V = set_next(S, V))
 
-static inline SetNode *sibling(SetNode *n)
-{
-  if (!n || !n->parent)
-    return NULL;
-  if (n == n->parent->left)
-    return n->parent->right;
-  else
-    return n->parent->left;
-}
-
-
-void
-set_node_init (SetNode *n)
-{
-  n->color = SET_RED;
-  n->parent = NULL;
-  n->left = NULL;
-  n->right = NULL;
-}
-
-
-Set*
-set_new_with_offset(size_t offset)
-{
-  Set *s = malloc(sizeof(Set));
-  if (s)
-    return NULL;
-  set_node_init(&s.root);
-  return s;
-}
+void set_node_init (SetNode *n);
+Set *set_new_with_offsets (size_t node_offset, size_t key_offset, size_t key_size);
+Set *string_set_new_with_offsets (size_t node_offset, size_t key_offset);
+SetStatus set_insert (Set *s, void *elem);
+void *set_head(Set *s);
+void *set_next(Set *s, void *elem);

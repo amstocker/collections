@@ -17,7 +17,7 @@ int
 comparator_strict (void *lhs, void *rhs, size_t _)
 {
   (void) _;  // unused
-  return (int) !(lhs == rhs);
+  return lhs < rhs ? -1 : lhs > rhs ? 1 : 0;
 }
 
 

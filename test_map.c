@@ -1,56 +1,59 @@
-// Word Count impl for testing hash map
 #include <stdio.h>
-#include <ctype.h>
+#include <stdint.h>
 #include "map.h"
-
-#define BUF_SIZE 64
 
 
 typedef struct {
-  int count;
-  char word[BUF_SIZE];
-  MapNode node;
-} Counter;
+    int x;
+    int y;
+} Key;
 
-char buf[BUF_SIZE];
+typedef struct {
+    char *val;
+    Key key;
+    MapNode node;
+} Coord;
 
 
-int next_word (FILE *fp)
-{
-  memset(buf, 0, sizeof(buf));
-  char *p = buf;
-  char c;
-  while
-    ((c = fgetc(fp)) != EOF && !isalnum(c));
-  if (c == EOF)
-    return 0;
-  do
-    *p++ = c;
-  while ((size_t) (p - buf) < BUF_SIZE &&
-         (c = fgetc(fp)) != EOF &&
-         isalnum(c));
-  return 1;
+Coord *make_coord(int x, int y, char *val) {
+    Coord *c = malloc(sizeof(Coord));
+    c->key.x = x;
+    c->key.y = y;
+    c->val = val;
+    map_node_init(&c->node);
+    return c;
 }
 
 
 int main() {
-  Map *m = string_map_new(Counter, node, word);
+    Map *m = map_new(Coord, node, key);
 
-  while (next_word(stdin)) {
-    Counter *c = map_get(m, buf);
-    if (!c) {
-      c = malloc(sizeof(Counter));
-      strcpy(c->word, buf);
-      c->count = 0;
-      map_add(m, c);
-    }
-    c->count++;
-  }
-  
-  // print word counts
-  MAP_FOREACH (Counter, c, m)
-    printf("%s: %i\n", c->word, c->count);
+    Coord *c;
 
-  map_free_all(m, free);
-  return 0;
+    c = make_coord(10, 42, "hello");
+    printf("adding (10, 42)\n");
+    map_add(m, c);
+
+    printf("adding (666, 747)\n");
+    c = make_coord(666, 747, "world!");
+    map_add(m, c);
+
+    Key key;
+    
+    key.x = 10;
+    key.y = 42;
+    c = map_get(m, &key);
+    printf("get (10, 42): %s\n", c->val);
+    
+    key.x = 666;
+    key.y = 747;
+    c = map_get(m, &key);
+    printf("get (666, 747): %s\n", c->val);
+
+    // should fail
+    key.x = -1;
+    c = map_get(m, &key);
+    printf("get (-1, 747): %p\n", c);
+
+    return 0;
 }
