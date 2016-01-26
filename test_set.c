@@ -1,71 +1,47 @@
+// models tree in an example in this article:
+//  https://www.topcoder.com/community/data-science/data-science-tutorials/an-introduction-to-binary-search-and-red-black-trees/
 #include <stdio.h>
 #include "set.h"
-
-
-#define BUF_SIZE 64
-#define ELEM(S, N) ((void *) ((size_t) N - S->node_offset))
+#include "comparator.h"
 
 typedef struct {
-  char name[BUF_SIZE];
-  int age;
+  int n;
   SetNode node;
-} Person;
+} Val;
 
-Person *person_new(char *name, int age) {
-  Person *p = malloc(sizeof(Person));
-  strcpy(p->name, name);
-  p->age = age;
-  return p;
-}
-
-Set *s;
-
-
-void print_set_helper (SetNode *n, int indent) {
-  static const char ph = '-';
-
-  for (int i = 0; i < indent; i++) putc(ph, stdout);
-  if (!n) {
-    printf("((null))\n");
-    return;
-  }
-  Person *p = ELEM(s, n);
-  printf("Person(\"%s\", %i)\n", p->name, p->age);
-  for (int i = 0; i < indent; i++) putc(ph, stdout);
-  printf("%cLEFT:\n", ph);
-  print_set_helper(n->left, indent+2);
-  for (int i = 0; i < indent; i++) putc(ph, stdout);
-  printf("%cRIGHT:\n", ph);
-  print_set_helper(n->right, indent+2);
-}
-
-void print_set (Set *s) {
-  print_set_helper(s->root, 1);
+void insert (Set *s, int n) {
+  Val *v = malloc(sizeof(Val));
+  v->n = n;
+  set_insert(s, v);
 }
 
 
 int main() {
-  s = string_set_new(Person, node, name);
+  Set *s = set_new(Val, node, n);
+  s->cmp = comparator_int;
 
-  Person *p;
+  insert(s, 11);
+  insert(s, 14);
+  insert(s, 15);
+  insert(s, 2);
+  insert(s, 1);
+  insert(s, 7);
+  insert(s, 5);
+  insert(s, 8);
 
-  puts("making 'Chris' ...");  
-  p = person_new("Chris", 21);
-  set_insert(s, p);
-  print_set(s);
+  puts("ascending order:");
+  SET_FOREACH (Val, v, s) {
+    printf("%i ", v->n);
+    fflush(stdout);
+  }
+  putc('\n', stdout);
 
-  puts("making 'Dave' ...");  
-  p = person_new("Dave", 22);
-  set_insert(s, p);
-  print_set(s);
-
-  puts("making 'Andrew' ...");  
-  p = person_new("Andrew", 25);
-  set_insert(s, p);
-  print_set(s);
-  
-  SET_FOREACH (Person, p, s)
-    printf("Person: %s (%i)\n", p->name, p->age);
+  puts("descending order:");
+  SET_FOREACH_DESC (Val, v, s) {
+    printf("%i ", v->n);
+    fflush(stdout);
+  }
+  putc('\n', stdout);
 
   return 0;
 }
