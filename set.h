@@ -44,8 +44,11 @@ typedef struct {
                                                  offsetof(T, NODE), \
                                                  offsetof(T, KEY))
 
-// 0 := leftwards
-// 1 := rightwards
+/**
+ * Flags:
+ *  0 -> starting at the smallest element and traversing to the largest
+ *  1 -> starting at the largest element and traversing to the smallest
+ **/
 #define set_head(S) set_first(S, 1)
 #define set_tail(S) set_first(S, 0)
 #define set_next(S, E) set_traverse(S, E, 1)
