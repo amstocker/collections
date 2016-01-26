@@ -1,12 +1,15 @@
 #include "set.h"
 
 
+#define LEFT 0
+#define RIGHT 1
+
 #define KEY(S, E) ((void*) ((size_t) E + S->key_offset))
 #define NODE(S, E) ((SetNode*) ((size_t) E + S->node_offset))
 #define ELEM(S, N) ((void *) ((size_t) N - S->node_offset))
 
-#define IS_LEFT_CHILD(N) ((N)->parent && (N) == (N)->parent->left)
-#define IS_RIGHT_CHILD(N) ((N)->parent && (N) == (N)->parent->right)
+#define IS_LEFT_CHILD(N) ((N)->parent && (N) == (N)->parent->link[LEFT])
+#define IS_RIGHT_CHILD(N) ((N)->parent && (N) == (N)->parent->link[RIGHT])
 
 static void insert (Set *s, SetNode *root, SetNode *node);
 
@@ -16,8 +19,8 @@ set_node_init (SetNode *n)
 {
   n->color = SET_BLACK;
   n->parent = NULL;
-  n->left = NULL;
-  n->right = NULL;
+  n->link[LEFT] = NULL;
+  n->link[RIGHT] = NULL;
 }
 
 
@@ -80,8 +83,8 @@ set_head (Set *s)
   SetNode *node = s->root;
   if (!node)
     return NULL;
-  while (node->left)
-    node = node->left;
+  while (node->link[LEFT])
+    node = node->link[LEFT];
   return ELEM(s, node);
 }
 
@@ -92,8 +95,8 @@ set_tail (Set *s)
   SetNode *node = s->root;
   if (!node)
     return NULL;
-  while (node->right)
-    node = node->right;
+  while (node->link[RIGHT])
+    node = node->link[RIGHT];
   return ELEM(s, node);
 }
 
@@ -102,10 +105,10 @@ void*
 set_next (Set *s, void *elem)
 {
   SetNode *node = NODE(s, elem);
-  if (node->right) {
-    node = node->right;
-    while (node->left)
-      node = node->left;
+  if (node->link[RIGHT]) {
+    node = node->link[RIGHT];
+    while (node->link[LEFT])
+      node = node->link[LEFT];
     return ELEM(s, node);
   }
   if (!node->parent)
@@ -124,10 +127,10 @@ void*
 set_prev (Set *s, void *elem)
 {
   SetNode *node = NODE(s, elem);
-  if (node->left) {
-    node = node->left;
-    while (node->right)
-      node = node->right;
+  if (node->link[LEFT]) {
+    node = node->link[LEFT];
+    while (node->link[RIGHT])
+      node = node->link[RIGHT];
     return ELEM(s, node);
   }
   if (!node->parent)
@@ -145,19 +148,11 @@ set_prev (Set *s, void *elem)
 static void
 insert (Set *s, SetNode *root, SetNode *node)
 {
-  if (s->cmp(node->key, root->key, s->key_size) < 0) {
-    if (!root->left) {
-      root->left = node;
-      node->parent = root;
-    } else {
-      return insert(s, root->left, node);
-    }
+  int dir = (s->cmp(node->key, root->key, s->key_size) > 0);
+  if (!root->link[dir]) {
+    root->link[dir] = node;
+    node->parent = root;
   } else {
-    if (!root->right) {
-      root->right = node;
-      node->parent = root;
-    } else {
-      return insert(s, root->right, node);
-    }
+    insert(s, root->link[dir], node);
   }
 }

@@ -17,9 +17,8 @@ typedef enum {
 typedef struct SetNode {
   void *key;
   SetNodeColor color;
-  struct SetNode *parent,
-                 *left,
-                 *right;
+  struct SetNode *parent;
+  struct SetNode *link[2];
 } SetNode;
 
 typedef enum {
