@@ -1,5 +1,5 @@
 // Word Count impl for testing hash map and set
-// gcc -std=c99 -Wall -O2 hash.c comparator.c map.c set.c example_wc.c -o wc
+// gcc -std=c99 -Wall -O2 -I. hash.c comparator.c map.c set.c examples/wc.c -o wc
 #include <stdio.h>
 #include <ctype.h>
 #include "map.h"
