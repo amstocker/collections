@@ -44,6 +44,13 @@ typedef struct {
                                                  offsetof(T, NODE), \
                                                  offsetof(T, KEY))
 
+// 0 := leftwards
+// 1 := rightwards
+#define set_head(S) set_first(S, 1)
+#define set_tail(S) set_first(S, 0)
+#define set_next(S, E) set_traverse(S, E, 1)
+#define set_prev(S, E) set_traverse(S, E, 0)
+
 #define SET_FOREACH(T, V, S) for (T *V = set_head(S); \
                                   V != NULL; \
                                   V = set_next(S, V))
@@ -57,7 +64,5 @@ Set *set_new_with_offsets (size_t node_offset, size_t key_offset, size_t key_siz
 Set *string_set_new_with_offsets (size_t node_offset, size_t key_offset);
 SetStatus set_free (Set *s);
 SetStatus set_insert (Set *s, void *elem);
-void *set_head (Set *s);
-void *set_tail (Set *s);
-void *set_next (Set *s, void *elem);
-void *set_prev (Set *s, void *elem);
+void *set_first (Set *s, int dir);
+void *set_traverse (Set *s, void *elem, int dir);

@@ -8,8 +8,7 @@
 #define NODE(S, E) ((SetNode*) ((size_t) E + S->node_offset))
 #define ELEM(S, N) ((void *) ((size_t) N - S->node_offset))
 
-#define IS_LEFT_CHILD(N) ((N)->parent && (N) == (N)->parent->link[LEFT])
-#define IS_RIGHT_CHILD(N) ((N)->parent && (N) == (N)->parent->link[RIGHT])
+#define IS_CHILD(N, dir) ((N)->parent && (N) == (N)->parent->link[dir])
 
 static void insert (Set *s, SetNode *root, SetNode *node);
 
@@ -78,69 +77,32 @@ set_insert (Set *s, void *elem)
 
 
 void*
-set_head (Set *s)
+set_first (Set *s, int dir)
 {
   SetNode *node = s->root;
   if (!node)
     return NULL;
-  while (node->link[LEFT])
-    node = node->link[LEFT];
+  while (node->link[!dir])
+    node = node->link[!dir];
   return ELEM(s, node);
 }
 
 
 void*
-set_tail (Set *s)
-{
-  SetNode *node = s->root;
-  if (!node)
-    return NULL;
-  while (node->link[RIGHT])
-    node = node->link[RIGHT];
-  return ELEM(s, node);
-}
-
-
-void*
-set_next (Set *s, void *elem)
+set_traverse (Set *s, void *elem, int dir)
 {
   SetNode *node = NODE(s, elem);
-  if (node->link[RIGHT]) {
-    node = node->link[RIGHT];
-    while (node->link[LEFT])
-      node = node->link[LEFT];
+  if (node->link[dir]) {
+    node = node->link[dir];
+    while (node->link[!dir])
+      node = node->link[!dir];
     return ELEM(s, node);
   }
+  while (node->parent &&
+         node == node->parent->link[dir])
+    node = node->parent;
   if (!node->parent)
     return NULL;
-  if IS_RIGHT_CHILD (node) {
-    while IS_RIGHT_CHILD (node)
-      node = node->parent;
-    if (!node->parent)
-      return NULL;
-  }
-  return ELEM(s, node->parent);
-}
-
-
-void*
-set_prev (Set *s, void *elem)
-{
-  SetNode *node = NODE(s, elem);
-  if (node->link[LEFT]) {
-    node = node->link[LEFT];
-    while (node->link[RIGHT])
-      node = node->link[RIGHT];
-    return ELEM(s, node);
-  }
-  if (!node->parent)
-    return NULL;
-  if IS_LEFT_CHILD (node) {
-    while IS_LEFT_CHILD (node)
-      node = node->parent;
-    if (!node->parent)
-      return NULL;
-  }
   return ELEM(s, node->parent);
 }
 
