@@ -46,8 +46,8 @@ typedef struct {
 
 /**
  * Flags:
- *  0 -> starting at the smallest element and traversing to the largest
- *  1 -> starting at the largest element and traversing to the smallest
+ *  0 -> traversing from smallest to largest
+ *  1 -> traversing from largest to smallest
  **/
 #define set_head(S) set_first(S, 1)
 #define set_tail(S) set_first(S, 0)

@@ -8,9 +8,9 @@
 #define NODE(S, E) ((SetNode*) ((size_t) E + S->node_offset))
 #define ELEM(S, N) ((void *) ((size_t) N - S->node_offset))
 
-#define IS_CHILD(N, dir) ((N)->parent && (N) == (N)->parent->link[dir])
-
-static void insert (Set *s, SetNode *root, SetNode *node);
+static SetStatus insert (Set *s, SetNode *root, SetNode *node);
+static SetNode *rotate_single (SetNode *root, int dir);
+static SetNode *rotate_double (SetNode *root, int dir);
 
 
 void
@@ -71,8 +71,7 @@ set_insert (Set *s, void *elem)
     return SET_OK;
   }
   node->color = SET_RED;
-  insert(s, s->root, node);
-  return SET_OK;
+  return insert(s, s->root, node);
 }
 
 
@@ -107,14 +106,40 @@ set_traverse (Set *s, void *elem, int dir)
 }
 
 
-static void
+static SetStatus
 insert (Set *s, SetNode *root, SetNode *node)
 {
+  if (node == root)
+    // reject duplicate node
+    return SET_ERR;
   int dir = (s->cmp(node->key, root->key, s->key_size) > 0);
   if (!root->link[dir]) {
     root->link[dir] = node;
     node->parent = root;
-  } else {
-    insert(s, root->link[dir], node);
+    return SET_OK;
   }
+  else
+    return insert(s, root->link[dir], node);
+}
+
+
+static SetNode*
+rotate_single (SetNode *root, int dir)
+{
+  SetNode *tmp = root->link[!dir];
+  root->link[!dir] = tmp->link[dir];
+  root->link[!dir]->parent = root;
+  tmp->link[dir] = root;
+  root->parent = tmp;
+  root->color = SET_RED;
+  tmp->color = SET_BLACK;
+  return tmp;
+}
+
+
+static SetNode*
+rotate_double (SetNode *root, int dir)
+{
+  root->link[!dir] = rotate_single(root->link[!dir], !dir);
+  return rotate_single(root, dir);
 }

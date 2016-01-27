@@ -1,19 +1,23 @@
 #include "comparator.h"
 
 
-#define NUMERIC_COMPARATOR(T) \
+#define COMPARATOR(NAME, TYPE) \
   int \
-  comparator_##T (void *lhs, void *rhs, size_t _) \
+  comparator_##NAME (void *lhs, void *rhs, size_t _) \
   { \
     (void) _; \
-    return   *(T*) lhs < *(T*) rhs ? -1 \
-           : *(T*) lhs > *(T*) rhs ?  1 \
+    return   *(TYPE*) lhs < *(TYPE*) rhs ? -1 \
+           : *(TYPE*) lhs > *(TYPE*) rhs ?  1 \
            : 0; \
   }
 
-NUMERIC_COMPARATOR(int);
-NUMERIC_COMPARATOR(float);
-NUMERIC_COMPARATOR(double);
+#define NUMERIC_COMPARATOR(T) COMPARATOR(T, T)
+#define STDINT_COMPARATOR(N) COMPARATOR(N, N##_t)
+
+
+NUMERIC_COMPARATOR(int)
+NUMERIC_COMPARATOR(float)
+NUMERIC_COMPARATOR(double)
 
 
 int
