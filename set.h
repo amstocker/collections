@@ -44,15 +44,13 @@ typedef struct {
                                                  offsetof(T, NODE), \
                                                  offsetof(T, KEY))
 
-/**
- * Flags:
- *  0 -> traversing from smallest to largest
- *  1 -> traversing from largest to smallest
- **/
-#define set_head(S) set_first(S, 1)
-#define set_tail(S) set_first(S, 0)
-#define set_next(S, E) set_traverse(S, E, 1)
-#define set_prev(S, E) set_traverse(S, E, 0)
+#define SET_RIGHT 1  // ascending order
+#define SET_LEFT 0   // descending order
+
+#define set_head(S) set_first(S, SET_RIGHT)
+#define set_tail(S) set_first(S, SET_LEFT)
+#define set_next(S, E) set_traverse(S, E, SET_RIGHT)
+#define set_prev(S, E) set_traverse(S, E, SET_LEFT)
 
 #define SET_FOREACH(T, V, S) for (T *V = set_head(S); \
                                   V != NULL; \
