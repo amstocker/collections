@@ -30,9 +30,9 @@ int next_word (FILE *fp)
     return 0;
   do
     *p++ = c;
-  while ((size_t) (p - buf) < BUF_SIZE &&
-         (c = fgetc(fp)) != EOF &&
-         isalnum(c));
+    while ((size_t) (p - buf) < BUF_SIZE &&
+           (c = fgetc(fp)) != EOF &&
+           isalnum(c));
   return 1;
 }
 
