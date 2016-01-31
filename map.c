@@ -207,9 +207,9 @@ add_node (Map *m, MapNode *node)
 static MapStatus
 maybe_rehash (Map *m)
 {
-  if ((float) m->nelements / m->nbuckets < MAP_HIGH_WATERMARK) {
+  if ((float) m->nelements / m->nbuckets < MAP_HIGH_WATERMARK)
     return MAP_OK;
-  }
+
   size_t old_size = m->nbuckets;
   size_t new_size = SIZEUP(old_size);
   MapNode **new_buckets = calloc(new_size, sizeof(MapNode*));
